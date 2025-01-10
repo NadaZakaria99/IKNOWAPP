@@ -93,11 +93,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Configuration
-NUM_CHUNKS = 3  
-SLIDE_WINDOW = 10  
+ 
 CORTEX_SEARCH_DATABASE = st.secrets["snowflake"]["database"]
 CORTEX_SEARCH_SCHEMA = st.secrets["snowflake"]["schema"]
-CORTEX_SEARCH_SERVICE = "IKNOW_SEARCH_SERVICE_CS"
+CORTEX_SEARCH_SERVICE = st.secrets["snowflake"]["search"]
 COLUMNS = [
     "chunk",
     "relative_path",
@@ -114,7 +113,8 @@ connection_params = {
     "schema": st.secrets["snowflake"]["schema"],
     "role": st.secrets["snowflake"]["role"],
 }
-
+NUM_CHUNKS = 3  
+SLIDE_WINDOW = 10 
 # Get active Snowflake session
 session = Session.builder.configs(connection_params).create()
 root = Root(session)
