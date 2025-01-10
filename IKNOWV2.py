@@ -435,7 +435,7 @@ def get_similar_chunks_search_service(query, Course_Content):
     if Course_Content == "ALL":
         response = svc.search(query, COLUMNS, limit=NUM_CHUNKS)
     else:
-        filter_obj = {"@eq": {"Course_Content": Course_Content}}
+        filter_obj = {"@eq": {"category": Course_Content}}  # Use "category" instead of "COURSE_CONTENT"
         response = svc.search(query, COLUMNS, filter=filter_obj, limit=NUM_CHUNKS)
     st.sidebar.json(response.json())
     return response.json()
