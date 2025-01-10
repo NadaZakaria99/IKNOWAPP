@@ -23,7 +23,7 @@ st.markdown("""
 
     /* Sidebar styling */
     .css-1d391kg {
-        background-color: #f0f2f6;
+        background-color: lightgreen;  /* Changed to light green */
         padding: 20px;
         border-radius: 10px;
     }
