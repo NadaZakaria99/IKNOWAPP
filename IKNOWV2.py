@@ -195,6 +195,7 @@ def create_prompt(query, Course_Content):
     - Prioritize topics that align with the syllabus or current lecture needs.
     - List all matching topics or resources as numbered options.
     - Ask which topic they'd like to explore in more detail.
+    - Ensure the answer is short and comprehensive.
 
     <chat_history>
     {chat_history}
