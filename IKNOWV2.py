@@ -219,13 +219,22 @@ def complete_query(query, Course_Content):
     # Check if the local search returned any results
     if not relative_paths:
         # Fallback to Tavily web search
-        web_search_results = tavily_client.search(query)
-        if web_search_results:
-            # Format the web search results into a response
-            web_response = "Here are some web search results that might help:\n\n"
-            for result in web_search_results[:3]:  # Limit to top 3 results
-                web_response += f"- [{result['title']}]({result['url']})\n"
-            return web_response, []
+        try:
+            web_search_results = tavily_client.search(query)
+            if web_search_results and isinstance(web_search_results, list):  # Ensure it's a list
+                # Format the web search results into a response
+                web_response = "Here are some web search results that might help:\n\n"
+                for result in web_search_results[:3]:  # Limit to top 3 results
+                    if isinstance(result, dict) and "title" in result and "url" in result:  # Ensure result is a dictionary with required keys
+                        web_response += f"- [{result['title']}]({result['url']})\n"
+                    else:
+                        web_response += "- No additional details available.\n"
+                return web_response, []
+            else:
+                return "No relevant results found in the web search.", []
+        except Exception as e:
+            st.error(f"An error occurred during the web search: {e}")
+            return "Unable to perform a web search at the moment. Please try again later.", []
     
     # If local search returned results, proceed as usual
     cmd = """
