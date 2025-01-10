@@ -6,12 +6,17 @@ import snowflake.connector
 import pandas as pd
 import json
 from langchain_community.tools.tavily_search import TavilySearchResults
+import logging
 
-# Initialize Tavily search
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize Tavily search with error handling
 try:
-    tavily_search = TavilySearchResults(api_key=st.secrets['TAVILY_API_KEY'])
+    tavily_search = TavilySearchResults(api_key=st.secrets["TAVILY_API_KEY"])
 except Exception as e:
-    st.error("Please add your Tavily API key to secrets with key 'TAVILY_API_KEY'")
+    logger.error(f"Failed to initialize Tavily search: {str(e)}")
     tavily_search = None
 
 # Custom CSS for styling
@@ -116,13 +121,18 @@ svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].corte
 
 def get_web_search_results(query):
     """Perform web search using Tavily."""
-    if tavily_search:
-        try:
-            results = tavily_search.invoke(query)
-            return results
-        except Exception as e:
-            return f"Error performing web search: {str(e)}"
-    return "Web search is not available (Tavily API key not configured)"
+    if tavily_search is None:
+        logger.warning("Tavily search is not initialized")
+        return ""
+        
+    try:
+        results = tavily_search.invoke({"query": query})
+        # Extract and format the search results
+        web_results = "\n".join([d["content"] for d in results])
+        return web_results
+    except Exception as e:
+        logger.error(f"Web search error: {str(e)}")
+        return ""
 
 def config_options():
     """Configure sidebar options for the application."""
@@ -175,17 +185,6 @@ def get_similar_chunks_search_service(query, Course_Content):
         response = svc.search(query, COLUMNS, filter=filter_obj, limit=NUM_CHUNKS)
     st.sidebar.json(response.json())
     return response.json()
-
-def get_web_search_results(query):
-    """Perform web search using Tavily."""
-    try:
-        results = tavily_search.invoke({"query": query})
-        # Extract and format the search results
-        web_results = "\n".join([d["content"] for d in results])
-        return web_results
-    except Exception as e:
-        logging.error(f"Web search error: {str(e)}")
-        return ""
 
 def create_prompt(query, Course_Content):
     """Create a prompt for the LLM with context from search results and chat history."""
@@ -242,7 +241,6 @@ def create_prompt(query, Course_Content):
             return prompt, set(), False
 
     else:
-        # Use original course content prompt
         prompt = f"""
         I am IKNOW, a friendly and witty lecture assistant specializing in helping with {Course_Content} topics! I love assisting students by explaining concepts and finding the best study resources from our collection.
 
@@ -267,6 +265,7 @@ def create_prompt(query, Course_Content):
         """
         relative_paths = set(item.get('relative_path', '') for item in json_data['results'])
         return prompt, relative_paths, False
+
 def complete_query(query, Course_Content):
     """Complete the query using Snowflake Cortex with web search fallback."""
     prompt, relative_paths, web_search_used = create_prompt(query, Course_Content)
