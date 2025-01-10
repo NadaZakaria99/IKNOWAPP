@@ -1,8 +1,3 @@
-### working and say i dont know
-
-
-import time
-
 import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.context import get_active_session
@@ -10,6 +5,7 @@ from snowflake.core import Root
 import snowflake.connector
 import pandas as pd
 import json
+import time
 
 # Custom CSS for styling
 st.markdown("""
@@ -207,48 +203,23 @@ def create_prompt(query, Course_Content):
     json_data = json.loads(prompt_context)
     relative_paths = set(item.get('relative_path', '') for item in json_data['results'])
     return prompt, relative_paths
-def complete_query_streaming(query, Course_Content):
-    """Complete the query using Snowflake Cortex with streaming response."""
-    prompt, relative_paths = create_prompt(query, Course_Content)
-    
-    # Initialize the streaming placeholder
-    message_placeholder = st.empty()
-    full_response = ""
-    
-    # Use Snowflake's streaming completion
-    cmd = """
-        select snowflake.cortex.complete_stream(
-            'mistral-large2',
-            ?,
-            object_construct('temperature', 0.7, 'max_tokens', 1024)
-        ) as response
-    """
-    
-    # Execute the streaming query
-    df_stream = session.sql(cmd, params=[prompt]).collect()
-    
-    # Process the streaming response
-    for row in df_stream:
-        chunk = row['RESPONSE']
-        full_response += chunk
-        
-        # Update the message placeholder with the accumulated response
-        message_placeholder.markdown(full_response + "▌")
-        time.sleep(0.01)  # Add a small delay for smoother streaming
-    
-    # Final update without the cursor
-    message_placeholder.markdown(full_response)
-    
-    return full_response, relative_paths
 
 def complete_query(query, Course_Content):
-    """Complete the query using Snowflake Cortex with Mistral Large 2 model."""
+    """Complete the query using Snowflake Cortex with Mistral Large 2 model and stream the response."""
     prompt, relative_paths = create_prompt(query, Course_Content)
     cmd = """
         select snowflake.cortex.complete(?, ?) as response
     """
     df_response = session.sql(cmd, params=['mistral-large2', prompt]).collect()
-    return df_response, relative_paths
+    res_text = df_response[0].RESPONSE
+
+    # Simulate streaming by yielding chunks of the response
+    def stream_response():
+        for chunk in res_text.split():
+            yield chunk + " "
+            time.sleep(0.1)  # Simulate a delay for streaming effect
+
+    return stream_response(), relative_paths
 
 def main():
     """Main Streamlit application function."""
@@ -278,20 +249,26 @@ def main():
     st.session_state.previous_category = current_category
 
     # Accept user input
-   # Accept user input
     if query := st.chat_input("What topics do you have?"):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": query})
         with st.chat_message("user"):
             st.markdown(query)
 
-        # Generate streaming response
+        # Generate response
+        current_category = st.session_state.lec_category
+        response_stream, relative_paths = complete_query(query, current_category)
+
+        # Display assistant response in a streaming fashion
         with st.chat_message("assistant"):
-            current_category = st.session_state.lec_category
-            response_text, relative_paths = complete_query_streaming(query, current_category)
-            
-            # Add the complete response to chat history after streaming
-            st.session_state.messages.append({"role": "assistant", "content": response_text})
+            response_container = st.empty()
+            full_response = ""
+            for chunk in response_stream:
+                full_response += chunk
+                response_container.markdown(full_response + "▌")
+            response_container.markdown(full_response)
+
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
 
         # Display related documents
         if relative_paths:
