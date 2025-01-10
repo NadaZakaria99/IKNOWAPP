@@ -10,20 +10,7 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 import os
 
 
-# Set the theme configuration
-st.set_page_config(
-    page_title="Lecture Assistant",
-    page_icon=":books:",
-    layout="wide",
-    initial_sidebar_state="expanded",
-    theme={
-        "primaryColor": "#FF4B4B",
-        "backgroundColor": "#FFFFFF",
-        "secondaryBackgroundColor": "lightgreen",  # Light green sidebar
-        "textColor": "#31333F",
-        "font": "sans serif"
-    }
-)
+
 # Set the Tavily API key
 os.environ["TAVILY_API_KEY"] = "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"
 web_search_tool = TavilySearchResults(k=3)
