@@ -12,7 +12,7 @@ import os
 
 
 # Set the Tavily API key
-os.environ["TAVILY_API_KEY"] = "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"
+os.environ["TAVILY_API_KEY"] = st.secrets["secrets"]["TAVILY_API_KEY"]
 web_search_tool = TavilySearchResults(k=3)
 
 # Custom CSS for styling
