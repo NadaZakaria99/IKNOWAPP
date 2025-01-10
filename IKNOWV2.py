@@ -5,7 +5,6 @@ from snowflake.core import Root
 import snowflake.connector
 import pandas as pd
 import json
-from langchain_community.tools.tavily_search import TavilySearchResults  # Import TavilySearchResults
 
 # Custom CSS for styling
 st.markdown("""
@@ -84,9 +83,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
 # Configuration
-NUM_CHUNKS = 4  # Number of chunks to retrieve
-SLIDE_WINDOW = 5  # Number of last conversations to remember
+NUM_CHUNKS = 3  # Number of chunks to retrieve
+SLIDE_WINDOW = 7  # Number of last conversations to remember
 CORTEX_SEARCH_DATABASE = st.secrets["snowflake"]["database"]
 CORTEX_SEARCH_SCHEMA = st.secrets["snowflake"]["schema"]
 CORTEX_SEARCH_SERVICE = "IKNOW_SEARCH_SERVICE_CS"
@@ -111,12 +111,6 @@ connection_params = {
 session = Session.builder.configs(connection_params).create()
 root = Root(session)
 svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].cortex_search_services[CORTEX_SEARCH_SERVICE]
-
-# Hardcoded Tavily API Key
-tavily_api_key = "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"
-
-# Initialize TavilySearchResults tool with the hardcoded API key
-web_search_tool = TavilySearchResults(k=3, tavily_api_key=tavily_api_key)
 
 def config_options():
     """Configure sidebar options for the application."""
@@ -216,23 +210,7 @@ def complete_query(query, Course_Content):
         select snowflake.cortex.complete(?, ?) as response
     """
     df_response = session.sql(cmd, params=['mistral-large2', prompt]).collect()
-    res_text = df_response[0].RESPONSE
-
-    # Check if the response indicates the query is not related to the course content
-    if "I'm sorry, I can only assist with topics related to" in res_text:
-        # Perform a web search using TavilySearchResults
-        try:
-            search_results = web_search_tool.invoke({"query": query})
-            if search_results:
-                res_text += "\n\nI performed a web search and found the following information:\n"
-                for result in search_results[:3]:  # Display top 3 results
-                    res_text += f"- [{result['title']}]({result['url']})\n"
-            else:
-                res_text += "\n\nI performed a web search but couldn't find any relevant information."
-        except Exception as e:
-            res_text += f"\n\nAn error occurred while performing the web search: {str(e)}. Please try again later."
-
-    return res_text, relative_paths
+    return df_response, relative_paths
 
 def main():
     """Main Streamlit application function."""
@@ -271,11 +249,12 @@ def main():
         # Generate response
         current_category = st.session_state.lec_category
         response, relative_paths = complete_query(query, current_category)
+        res_text = response[0].RESPONSE
 
         # Display assistant response
         with st.chat_message("assistant"):
-            st.markdown(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+            st.markdown(res_text)
+        st.session_state.messages.append({"role": "assistant", "content": res_text})
 
         # Display related documents
         if relative_paths:
