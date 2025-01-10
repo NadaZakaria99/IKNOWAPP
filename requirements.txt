@@ -7,3 +7,4 @@ langchain
 langchain-huggingface
 langchain-community
 tavily-python
+tavily
