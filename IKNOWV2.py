@@ -1,4 +1,3 @@
-###########with stream
 import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.context import get_active_session
@@ -7,6 +6,13 @@ import snowflake.connector
 import pandas as pd
 import json
 import time
+from langchain_community.tools.tavily_search import TavilySearchResults
+
+# Set the Tavily API key
+TAVILY_API_KEY = "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"
+
+# Initialize the TavilySearchResults tool with the API key
+web_search_tool = TavilySearchResults(k=3, tavily_api_key=TAVILY_API_KEY)
 
 # Custom CSS for styling
 st.markdown("""
@@ -118,8 +124,8 @@ def config_options():
     """Configure sidebar options for the application."""
     Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
-    st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
-    st.sidebar.button("Start Over", key="clear_conversation", on_click=init_messages)
+    #st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
+    st.sidebar.button("Reset Chat", key="clear_conversation", on_click=init_messages)
 
 def init_messages():
     """Initialize chat history."""
@@ -213,6 +219,25 @@ def complete_query(query, Course_Content):
     """
     df_response = session.sql(cmd, params=['mistral-large2', prompt]).collect()
     res_text = df_response[0].RESPONSE
+
+    # Check if the response indicates that it can only assist with topics related to the selected course content
+    if res_text.strip() == f"I'm sorry, I can only assist with topics related to {Course_Content}.":
+        # Perform a web search using the TavilySearchResults tool
+        web_search_results = web_search_tool.invoke(query)
+        
+        # Create a new prompt with the web search results and the original query
+        web_search_prompt = f"""
+        The original query was: {query}
+
+        Here are some web search results that might be relevant:
+        {web_search_results}
+
+        Please provide a structured answer based on the above information.
+        """
+        
+        # Generate the final structured answer using the LLM
+        df_web_response = session.sql(cmd, params=['mistral-large2', web_search_prompt]).collect()
+        res_text = df_web_response[0].RESPONSE
 
     # Simulate streaming by yielding chunks of the response
     def stream_response():
