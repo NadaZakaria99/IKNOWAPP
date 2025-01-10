@@ -176,8 +176,27 @@ def get_similar_chunks_search_service(query, Course_Content):
     st.sidebar.json(response.json())
     return response.json()
 
+def get_web_search_results(query):
+    """Perform web search using Tavily."""
+    try:
+        results = tavily_search.invoke({"query": query})
+        # Extract and format the search results
+        web_results = "\n".join([d["content"] for d in results])
+        return web_results
+    except Exception as e:
+        logging.error(f"Web search error: {str(e)}")
+        return ""
+
 def create_prompt(query, Course_Content):
     """Create a prompt for the LLM with context from search results and chat history."""
+    # Handle basic greetings directly without search
+    greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]
+    if query.lower().strip() in greetings:
+        prompt = """
+        I am IKNOW, your friendly study partner! 👋 I'm here to help you understand your course materials and answer your questions. What would you like to learn about today?
+        """
+        return prompt, set(), False
+
     if st.session_state.use_chat_history:
         chat_history = get_chat_history()
         if chat_history:
@@ -191,38 +210,36 @@ def create_prompt(query, Course_Content):
 
     json_data = json.loads(prompt_context)
     
-    # Check if we have relevant course content by examining both results and content relevance
-    if not json_data['results'] or all(float(result.get('score', 0)) < 0.5 for result in json_data['results']):
-        # No relevant course content found or low relevance scores, use web search
+    # Check if we have relevant course content
+    if not json_data['results']:
+        # No course content found, try web search
         web_results = get_web_search_results(query)
         
-        if isinstance(web_results, str) and "Error" in web_results:
-            # Handle web search error
+        if web_results:
             prompt = f"""
-            I am IKNOW, and I notice this question isn't related to our {Course_Content} content.
-            I tried to search the web but encountered an error. Please ask a question related to {Course_Content} or try again later.
-            
+            I am IKNOW, and since this question isn't related to our {Course_Content} content,
+            I've searched the web to help you. Here are the relevant results:
+
+            <web_search_results>
+            {web_results}
+            </web_search_results>
+
             User Query: {query}
+
+            Please provide a helpful response based on these web search results. Make sure to mention that 
+            this information comes from web search. Keep the response concise and relevant.
+
             Response (as IKNOW, study partner):
             """
             return prompt, set(), True
-            
-        prompt = f"""
-        I am IKNOW, and since this question isn't related to our {Course_Content} content,
-        I've searched the web to help you. Here are the web search results:
-
-        <web_search_results>
-        {web_results}
-        </web_search_results>
-
-        User Query: {query}
-
-        Provide a comprehensive answer based on these web search results. Start your response with 
-        "Based on web search results," to clearly indicate the source of information.
-        
-        Response (as IKNOW, study partner):
-        """
-        return prompt, set(), True  # Empty set for relative_paths, True for web_search_used
+        else:
+            # If web search fails
+            prompt = f"""
+            I am IKNOW, and I notice this question isn't related to our {Course_Content} content.
+            I apologize, but I'm unable to perform a web search at the moment. Please try asking about 
+            {Course_Content} topics, and I'll be happy to help!
+            """
+            return prompt, set(), False
 
     else:
         # Use original course content prompt
