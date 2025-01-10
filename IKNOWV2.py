@@ -218,13 +218,16 @@ def complete_query(query, Course_Content):
     # Check if the response indicates the query is not related to the course content
     if "I'm sorry, I can only assist with topics related to" in res_text:
         # Perform a web search using Tavily
-        search_results = tavily_client.search(query)
-        if search_results:
-            res_text += "\n\nI performed a web search and found the following information:\n"
-            for result in search_results[:3]:  # Display top 3 results
-                res_text += f"- [{result['title']}]({result['url']})\n"
-        else:
-            res_text += "\n\nI performed a web search but couldn't find any relevant information."
+        try:
+            search_results = tavily_client.search(query)
+            if search_results:
+                res_text += "\n\nI performed a web search and found the following information:\n"
+                for result in search_results[:3]:  # Display top 3 results
+                    res_text += f"- [{result['title']}]({result['url']})\n"
+            else:
+                res_text += "\n\nI performed a web search but couldn't find any relevant information."
+        except Exception as e:
+            res_text += "\n\nAn error occurred while performing the web search. Please try again later."
 
     return res_text, relative_paths
 
