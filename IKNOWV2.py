@@ -1,3 +1,4 @@
+###########with stream
 import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.context import get_active_session
@@ -81,13 +82,9 @@ st.markdown("""
     .stTextInput>div>div>input::placeholder {
         color: #95a5a6;
     }
-
-    /* Hide elements under the Start Over button */
-    .hide-content {
-        display: none;
-    }
     </style>
 """, unsafe_allow_html=True)
+
 
 # Configuration
 NUM_CHUNKS = 3  # Number of chunks to retrieve
