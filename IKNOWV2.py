@@ -15,18 +15,9 @@ st.markdown("""
         background-color: lightblue;
     }
 
-    /* Sidebar styling */
+    /* Hide the sidebar completely */
     .css-1d391kg {
-        background-color: #f0f2f6;
-        padding: 20px;
-        border-radius: 10px;
-    }
-    .css-1d391kg h1 {
-        color: #2c3e50;
-        font-size: 24px;
-    }
-    .css-1d391kg .stSelectbox, .css-1d391kg .stCheckbox, .css-1d391kg .stButton {
-        margin-bottom: 15px;
+        display: none;
     }
 
     /* Chat input box styling */
@@ -57,14 +48,13 @@ st.markdown("""
         color: #2c3e50;
     }
 
-    /* Sidebar header styling */
-    .css-1d391kg h1 {
-        font-size: 20px;
-        font-weight: bold;
-        color: #2c3e50;
+    /* Start Over button positioning */
+    .start-over-button {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        z-index: 1000;
     }
-
-    /* Sidebar button styling */
     .stButton>button {
         background-color: #3498db;
         color: white;
@@ -81,16 +71,8 @@ st.markdown("""
     .stTextInput>div>div>input::placeholder {
         color: #95a5a6;
     }
-
-    /* Start Over button positioning */
-    .start-over-button {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 10px;
-    }
     </style>
 """, unsafe_allow_html=True)
-
 
 # Configuration
 NUM_CHUNKS = 3  # Number of chunks to retrieve
@@ -286,7 +268,7 @@ def main():
                     display_url = f"Document: [{path}]({url_link})"
                     st.sidebar.markdown(display_url)
 
-    # Add "Start Over" button below the chat input
+    # Add "Start Over" button at the bottom-right
     st.markdown('<div class="start-over-button">', unsafe_allow_html=True)
     if st.button("Start Over", key="clear_conversation", on_click=init_messages):
         st.session_state.messages = []
