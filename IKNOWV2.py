@@ -39,7 +39,7 @@ st.markdown("""
 
     /* Chat input box styling */
     .stTextInput>div>div>input {
-        background-color: #ffffff;
+        background-color: lightgreen;
         border-radius: 20px;
         padding: 10px 15px;
         font-size: 16px;
