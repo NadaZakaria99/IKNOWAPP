@@ -89,7 +89,7 @@ NUM_CHUNKS = 3  # Number of chunks to retrieve
 SLIDE_WINDOW = 7  # Number of last conversations to remember
 CORTEX_SEARCH_DATABASE = st.secrets["snowflake"]["database"]
 CORTEX_SEARCH_SCHEMA = st.secrets["snowflake"]["schema"]
-CORTEX_SEARCH_SERVICE = "CC_SEARCH_SERVICE_CS"
+CORTEX_SEARCH_SERVICE = "IKNOW_SEARCH_SERVICE_CS"
 COLUMNS = [
     "chunk",
     "relative_path",
@@ -114,8 +114,8 @@ svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].corte
 
 def config_options():
     """Configure sidebar options for the application."""
-    categories = ['weekone', 'weektwo', 'weekthree']
-    st.sidebar.selectbox('Select the week', categories, key="lec_category")
+    Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
+    st.sidebar.selectbox('select the lecture', Course_Content, key="lec_category")
     st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
     st.sidebar.button("Start Over", key="clear_conversation", on_click=init_messages)
 
@@ -123,8 +123,7 @@ def init_messages():
     """Initialize chat history."""
     if st.session_state.get("clear_conversation") or "messages" not in st.session_state:
         st.session_state.messages = []
-        # Add Ali's introduction message
-        welcome_message = "Hello! I'm IKNOW, your friendly lecture assistant! 👋 Tell me about your course materials and topics, and I'll help you organize, understand, and make the most of your learning journey! 📚 Whether you need help reviewing concepts, creating study guides, or understanding complex topics, I'm here to support your academic success. What would you like to explore today? 🎓"
+        welcome_message = "Hello! I'm IKNOW, your study partner! 👋 Share your course topics with me, and I'll help you organize, understand, and excel in your learning journey! 📚 What can we explore together today? 🎓"
         st.session_state.messages.append({"role": "assistant", "content": welcome_message})
 
 def get_chat_history():
@@ -153,17 +152,17 @@ def summarize_question_with_history(chat_history, question):
     summary = df_response[0].RESPONSE
     return summary.replace("'", "")
 
-def get_similar_chunks_search_service(query, category):
+def get_similar_chunks_search_service(query, Course_Content):
     """Search for similar chunks based on query and category."""
-    if category == "ALL":
+    if Course_Content == "ALL":
         response = svc.search(query, COLUMNS, limit=NUM_CHUNKS)
     else:
-        filter_obj = {"@eq": {"category": category}}
+        filter_obj = {"@eq": {"Course_Content": Course_Content}}
         response = svc.search(query, COLUMNS, filter=filter_obj, limit=NUM_CHUNKS)
     st.sidebar.json(response.json())
     return response.json()
 
-def create_prompt(query, category):
+def create_prompt(query, Course_Content):
     """Create a prompt for the LLM with context from search results and chat history."""
     if st.session_state.use_chat_history:
         chat_history = get_chat_history()
@@ -171,13 +170,13 @@ def create_prompt(query, category):
             question_summary = summarize_question_with_history(chat_history, query)
             prompt_context = get_similar_chunks_search_service(question_summary, category)
         else:
-            prompt_context = get_similar_chunks_search_service(query, category)
+            prompt_context = get_similar_chunks_search_service(query, Course_Content)
     else:
-        prompt_context = get_similar_chunks_search_service(query, category)
+        prompt_context = get_similar_chunks_search_service(query, Course_Content)
         chat_history = ""
 
     prompt = f"""
-    I am IKNOW, a friendly and witty lecture assistant specializing in helping with {category} topics! I love assisting students by explaining concepts and finding the best study resources from our collection.
+    I am IKNOW, a friendly and witty lecture assistant specializing in helping with {Course_Content} topics! I love assisting students by explaining concepts and finding the best study resources from our collection.
 
     Conversation Flow:
     1. When suggesting lecture content or topics:
@@ -201,9 +200,9 @@ def create_prompt(query, category):
     </context>
 
     User Query: {query}
-    Current Category: {category}
+    Current Course_Content: {Course_Content}
 
-    Response (as Ali, friendly and category-aware):
+    Response (as IKNOW,study partner):
     """
 
     json_data = json.loads(prompt_context)
@@ -212,7 +211,7 @@ def create_prompt(query, category):
 
 def complete_query(query, category):
     """Complete the query using Snowflake Cortex with Mistral model."""
-    prompt, relative_paths = create_prompt(query, category)
+    prompt, relative_paths = create_prompt(query, Course_Content)
     cmd = """
         select snowflake.cortex.complete(?, ?) as response
     """
@@ -239,7 +238,7 @@ def main():
     current_category = st.session_state.lec_category
     if (st.session_state.previous_category is not None and 
         current_category != st.session_state.previous_category):
-        category_message = f"I see you've switched to {current_category}! Let me help you find {current_category} lecs! 👨‍🍳"
+        category_message = f"I see you've switched to {current_category}! Let me help you find {current_category} Lecture! 👨‍🍳"
         st.session_state.messages.append({"role": "assistant", "content": category_message})
         with st.chat_message("assistant"):
             st.markdown(category_message)
