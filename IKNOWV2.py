@@ -5,7 +5,7 @@ from snowflake.core import Root
 import snowflake.connector
 import pandas as pd
 import json
-from tavily import TavilyClient  # Import Tavily client
+from langchain_community.tools.tavily_search import TavilySearchResults  # Import TavilySearchResults
 
 # Custom CSS for styling
 st.markdown("""
@@ -112,8 +112,8 @@ session = Session.builder.configs(connection_params).create()
 root = Root(session)
 svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].cortex_search_services[CORTEX_SEARCH_SERVICE]
 
-# Initialize Tavily client
-tavily_client = TavilyClient(api_key=st.secrets["tavily"]["api_key"])
+# Initialize TavilySearchResults tool
+web_search_tool = TavilySearchResults(k=3)  # Retrieve top 3 search results
 
 def config_options():
     """Configure sidebar options for the application."""
@@ -217,9 +217,9 @@ def complete_query(query, Course_Content):
 
     # Check if the response indicates the query is not related to the course content
     if "I'm sorry, I can only assist with topics related to" in res_text:
-        # Perform a web search using Tavily
+        # Perform a web search using TavilySearchResults
         try:
-            search_results = tavily_client.search(query)
+            search_results = web_search_tool.invoke({"query": query})
             if search_results:
                 res_text += "\n\nI performed a web search and found the following information:\n"
                 for result in search_results[:3]:  # Display top 3 results
@@ -227,7 +227,7 @@ def complete_query(query, Course_Content):
             else:
                 res_text += "\n\nI performed a web search but couldn't find any relevant information."
         except Exception as e:
-            res_text += "\n\nAn error occurred while performing the web search. Please try again later."
+            res_text += f"\n\nAn error occurred while performing the web search: {str(e)}. Please try again later."
 
     return res_text, relative_paths
 
