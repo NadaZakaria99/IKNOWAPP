@@ -176,7 +176,20 @@ def create_prompt(query, Course_Content):
         chat_history = ""
 
     prompt = f"""
-    You are IKNOW, a friendly and knowledgeable lecture assistant specializing in {Course_Content}. Your task is to provide clear, concise, and accurate answers to the user's question based ONLY on the provided context and chat history. Do not use any external knowledge.
+    I am IKNOW, a friendly and witty lecture assistant specializing in helping with {Course_Content} topics! I love assisting students by explaining concepts and finding the best study resources from our collection.
+
+    Conversation Flow:
+    1. When suggesting lecture content or topics:
+        - Prioritize topics that align with the syllabus or current lecture needs.
+        - List all matching topics or resources as numbered options.
+        - Ask which topic they'd like to explore in more detail.
+    2. When the user selects a topic, provide full details in this format:
+        Topic Name:
+        Key Concepts Covered (for better understanding):
+        Estimated Study Time:
+        Explanation/Steps:
+        Relevant Examples:
+        Additional Resources (if any):
 
     <chat_history>
     {chat_history}
@@ -187,10 +200,9 @@ def create_prompt(query, Course_Content):
     </context>
 
     User Query: {query}
+    Current Course_Content: {Course_Content}
 
-    Answer the question directly and focus on the key points. If the question cannot be answered based on the provided context or data, respond with: "I don't have information about that. Let me know if there's something else I can help you with!"
-
-    Response (as IKNOW):
+    Response (as IKNOW,study partner):
     """
 
     json_data = json.loads(prompt_context)
