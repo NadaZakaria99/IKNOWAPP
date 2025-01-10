@@ -112,8 +112,8 @@ session = Session.builder.configs(connection_params).create()
 root = Root(session)
 svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].cortex_search_services[CORTEX_SEARCH_SERVICE]
 
-# Initialize TavilySearchResults tool
-web_search_tool = TavilySearchResults(k=3)  # Retrieve top 3 search results
+# Initialize TavilySearchResults tool with the API key from secrets.toml
+web_search_tool = TavilySearchResults(k=3, tavily_api_key=st.secrets["tavily"]["tavily_api_key"])
 
 def config_options():
     """Configure sidebar options for the application."""
