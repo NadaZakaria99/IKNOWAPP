@@ -130,8 +130,15 @@ def create_prompt(query, Course_Content):
     has_course_content = has_relevant_context(prompt_context)
     
     if has_course_content:
+        # Improved prompt to extract more specific information
         prompt = f"""
-        Based on the course materials, provide a direct and concise answer to: {query}
+        Extract the most relevant information from the context and provide a clear, direct answer to: {query}
+        
+        Rules:
+        1. Focus on the specific information that answers the question
+        2. Present the answer in a clear, concise manner
+        3. If multiple relevant points exist, combine them into a coherent response
+        4. Exclude irrelevant details
         
         <context>
         {prompt_context}
@@ -153,9 +160,20 @@ def create_prompt(query, Course_Content):
                     }]
                 })
                 st.info("Using web search for this answer.")
-                prompt = f"Provide a direct and concise answer to: {query}\n\nContext:\n{web_context}"
+                prompt = f"""
+                Based on the web search results, provide a clear and direct answer to: {query}
+                
+                Rules:
+                1. Extract the key information that directly answers the question
+                2. Combine relevant details into a single coherent response
+                3. Present the information clearly and concisely
+                4. If the information is insufficient, acknowledge this
+                
+                Context:
+                {web_context}
+                """
         except Exception as e:
-            return "I couldn't find information about that. Please try asking something else.", set()
+            return "I apologize, but I couldn't find sufficient information to answer your question. Could you please rephrase or ask something else?", set()
 
     json_data = json.loads(prompt_context)
     relative_paths = set(item.get('relative_path', '') for item in json_data['results'])
