@@ -10,12 +10,9 @@ from tavily import TavilyClient
 # Custom CSS for styling
 st.markdown("""
     <style>
-    /* Main app background */
     .stApp {
         background-color: lightblue;
     }
-
-    /* Sidebar styling */
     .css-1d391kg {
         background-color: #f0f2f6;
         padding: 20px;
@@ -28,8 +25,6 @@ st.markdown("""
     .css-1d391kg .stSelectbox, .css-1d391kg .stCheckbox, .css-1d391kg .stButton {
         margin-bottom: 15px;
     }
-
-    /* Chat input box styling */
     .stTextInput>div>div>input {
         background-color: #ffffff;
         border-radius: 20px;
@@ -41,8 +36,6 @@ st.markdown("""
         border-color: #3498db;
         box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
     }
-
-    /* Chat message styling */
     .stChatMessage {
         padding: 10px;
         border-radius: 10px;
@@ -56,15 +49,11 @@ st.markdown("""
         background-color: #ecf0f1;
         color: #2c3e50;
     }
-
-    /* Sidebar header styling */
     .css-1d391kg h1 {
         font-size: 20px;
         font-weight: bold;
         color: #2c3e50;
     }
-
-    /* Sidebar button styling */
     .stButton>button {
         background-color: #3498db;
         color: white;
@@ -76,8 +65,6 @@ st.markdown("""
     .stButton>button:hover {
         background-color: #2980b9;
     }
-
-    /* Input box placeholder text */
     .stTextInput>div>div>input::placeholder {
         color: #95a5a6;
     }
@@ -85,17 +72,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Configuration
-NUM_CHUNKS = 3  # Number of chunks to retrieve
-SLIDE_WINDOW = 7  # Number of last conversations to remember
+NUM_CHUNKS = 3
+SLIDE_WINDOW = 7
 CORTEX_SEARCH_DATABASE = st.secrets["snowflake"]["database"]
 CORTEX_SEARCH_SCHEMA = st.secrets["snowflake"]["schema"]
 CORTEX_SEARCH_SERVICE = "IKNOW_SEARCH_SERVICE_CS"
 TAVILY_API_KEY = st.secrets["tavily"]["api_key"]
-COLUMNS = [
-    "chunk",
-    "relative_path",
-    "category"
-]
+COLUMNS = ["chunk", "relative_path", "category"]
 
 # Initialize Tavily client
 tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
@@ -111,13 +94,12 @@ connection_params = {
     "role": st.secrets["snowflake"]["role"],
 }
 
-# Get active Snowflake session
 session = Session.builder.configs(connection_params).create()
 root = Root(session)
 svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].cortex_search_services[CORTEX_SEARCH_SERVICE]
 
 def get_web_search_results(query):
-    """Perform web search using Tavily API when local context is insufficient."""
+    """Perform web search using Tavily API."""
     try:
         search_result = tavily_client.search(
             query=query,
@@ -131,13 +113,26 @@ def get_web_search_results(query):
 
 def has_relevant_context(prompt_context):
     """Check if the Snowflake search returned relevant results."""
-    json_data = json.loads(prompt_context)
-    results = json_data.get('results', [])
-    return len(results) > 0 and any(len(result.get('chunk', '')) > 50 for result in results)
+    try:
+        json_data = json.loads(prompt_context)
+        results = json_data.get('results', [])
+        
+        for result in results:
+            chunk = result.get('chunk', '').strip()
+            if len(chunk) > 100 and not chunk.startswith(('Source:', 'http', 'www')):
+                return True
+        return False
+    except Exception as e:
+        st.error(f"Error checking context: {str(e)}")
+        return False
 
 def config_options():
-    """Configure sidebar options for the application."""
-    Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen', 'weekfifteen']
+    """Configure sidebar options."""
+    Course_Content = [
+        'weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive',
+        'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten',
+        'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen', 'weekfifteen'
+    ]
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
     st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
     st.sidebar.button("Start Over", key="clear_conversation", on_click=init_messages)
@@ -146,11 +141,11 @@ def init_messages():
     """Initialize chat history."""
     if st.session_state.get("clear_conversation") or "messages" not in st.session_state:
         st.session_state.messages = []
-        welcome_message = "Hello! I'm IKNOW, your study partner! 👋 Share your course topics with me, and I'll help you organize, understand, and excel in your learning journey! 📚 What can we explore together today? 🎓"
+        welcome_message = "Hello! I'm IKNOW, your study partner! 👋 Share your course topics with me, and I'll help you organize, understand, and excel in your learning journey! 📚"
         st.session_state.messages.append({"role": "assistant", "content": welcome_message})
 
 def get_chat_history():
-    """Retrieve recent messages from the chat history."""
+    """Retrieve recent chat history."""
     chat_history = []
     start_index = max(0, len(st.session_state.messages) - SLIDE_WINDOW)
     for i in range(start_index, len(st.session_state.messages) - 1):
@@ -158,7 +153,7 @@ def get_chat_history():
     return chat_history
 
 def summarize_question_with_history(chat_history, question):
-    """Summarize the chat history and current question for better context."""
+    """Generate a summary query based on chat history and current question."""
     prompt = f"""
         Based on the chat history below and the question, generate a query that extends the question
         with the chat history provided. The query should be in natural language. 
@@ -172,21 +167,19 @@ def summarize_question_with_history(chat_history, question):
     """
     cmd = "select snowflake.cortex.complete(?, ?) as response"
     df_response = session.sql(cmd, params=['mistral-large2', prompt]).collect()
-    summary = df_response[0].RESPONSE
-    return summary.replace("'", "")
+    return df_response[0].RESPONSE.replace("'", "")
 
 def get_similar_chunks_search_service(query, Course_Content):
-    """Search for similar chunks based on query and category."""
+    """Search for relevant content chunks."""
     if Course_Content == "ALL":
         response = svc.search(query, COLUMNS, limit=NUM_CHUNKS)
     else:
         filter_obj = {"@eq": {"category": Course_Content}}
         response = svc.search(query, COLUMNS, filter=filter_obj, limit=NUM_CHUNKS)
-    st.sidebar.json(response.json())
     return response.json()
 
 def create_prompt(query, Course_Content):
-    """Create a prompt with context from both Snowflake and web search when needed."""
+    """Create prompt with context from course materials or web search."""
     if st.session_state.use_chat_history:
         chat_history = get_chat_history()
         if chat_history:
@@ -198,12 +191,11 @@ def create_prompt(query, Course_Content):
         prompt_context = get_similar_chunks_search_service(query, Course_Content)
         chat_history = ""
 
-    # Check if we need web search
+    # Check for relevant context and use web search if needed
     if not has_relevant_context(prompt_context):
-        st.info("Searching web for additional information...")
         web_results = get_web_search_results(query)
         if web_results:
-            web_context = "\n".join([
+            web_context = "Information from web search:\n" + "\n".join([
                 f"Source: {result['url']}\n{result['content']}"
                 for result in web_results['results'][:3]
             ])
@@ -215,22 +207,17 @@ def create_prompt(query, Course_Content):
                 }]
             }
             prompt_context = json.dumps(prompt_context)
+            st.info("No relevant information found in course materials. Using web search results.")
 
     prompt = f"""
-    I am IKNOW, a friendly and witty lecture assistant specializing in helping with {Course_Content} topics! I love assisting students by explaining concepts and finding the best study resources from our collection and the web when needed.
+    I am IKNOW, a friendly and helpful lecture assistant specializing in {Course_Content} topics! 
+    When using web search results, I'll clearly indicate that the information comes from external sources.
 
-    Conversation Flow:
-    1. When suggesting lecture content or topics:
-        - Prioritize topics that align with the syllabus or current lecture needs.
-        - List all matching topics or resources as numbered options.
-        - Ask which topic they'd like to explore in more detail.
-    2. When the user selects a topic, provide full details in this format:
-        Topic Name:
-        Key Concepts Covered (for better understanding):
-        Estimated Study Time:
-        Explanation/Steps:
-        Relevant Examples:
-        Additional Resources (if any):
+    Instructions for response:
+    - If using course materials, focus on the provided lecture content
+    - If using web search results, start the response with "Based on web search results:"
+    - Always maintain an educational and informative tone
+    - Provide specific examples when possible
 
     <chat_history>
     {chat_history}
@@ -251,59 +238,58 @@ def create_prompt(query, Course_Content):
     return prompt, relative_paths
 
 def complete_query(query, Course_Content):
-    """Complete the query using Snowflake Cortex with Mistral Large 2 model."""
+    """Generate response using Snowflake Cortex."""
     prompt, relative_paths = create_prompt(query, Course_Content)
-    cmd = """
-        select snowflake.cortex.complete(?, ?) as response
-    """
+    cmd = "select snowflake.cortex.complete(?, ?) as response"
     df_response = session.sql(cmd, params=['mistral-large2', prompt]).collect()
-    return df_response, relative_paths
+    
+    response_text = df_response[0].RESPONSE
+    if "web_search_results" in relative_paths:
+        if not response_text.startswith("Based on web search results:"):
+            response_text = "Based on web search results:\n" + response_text
+    
+    return [(response_text, df_response[0].keys()[0])], relative_paths
 
 def main():
-    """Main Streamlit application function."""
+    """Main application function."""
     st.title(":books: :mortar_board: Lecture Assistant with History")
 
-    # Track previous category
     if "previous_category" not in st.session_state:
         st.session_state.previous_category = None
 
     config_options()
     init_messages()
 
-    # Display chat messages from history on app rerun
+    # Display chat history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Check for category change
+    # Handle category changes
     current_category = st.session_state.lec_category
     if (st.session_state.previous_category is not None and 
         current_category != st.session_state.previous_category):
-        category_message = f"I see you've switched to {current_category}! Let me help you find {current_category} Lecture! 👨‍🍳"
+        category_message = f"I see you've switched to {current_category}! Let me help you find {current_category} Lecture! 📚"
         st.session_state.messages.append({"role": "assistant", "content": category_message})
         with st.chat_message("assistant"):
             st.markdown(category_message)
 
     st.session_state.previous_category = current_category
 
-    # Accept user input
+    # Handle user input
     if query := st.chat_input("What topics do you have?"):
-        # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": query})
         with st.chat_message("user"):
             st.markdown(query)
 
-        # Generate response
-        current_category = st.session_state.lec_category
         response, relative_paths = complete_query(query, current_category)
-        res_text = response[0].RESPONSE
+        res_text = response[0][0]
 
-        # Display assistant response
         with st.chat_message("assistant"):
             st.markdown(res_text)
         st.session_state.messages.append({"role": "assistant", "content": res_text})
 
-        # Display related documents
+        # Display related documents for course content
         if relative_paths and "web_search_results" not in relative_paths:
             with st.sidebar.expander("Related Documents"):
                 for path in relative_paths:
