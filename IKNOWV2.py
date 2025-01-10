@@ -30,7 +30,7 @@ st.markdown("""
         border-radius: 10px;
     }
     .css-1d391kg h1 {
-        color: #2c3e50;
+        color: lightgreen;
         font-size: 24px;
     }
     .css-1d391kg .stSelectbox, .css-1d391kg .stCheckbox, .css-1d391kg .stButton {
