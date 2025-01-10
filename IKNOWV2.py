@@ -1,4 +1,3 @@
-###########with stream
 import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.context import get_active_session
@@ -85,7 +84,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
 # Configuration
 NUM_CHUNKS = 3  # Number of chunks to retrieve
 SLIDE_WINDOW = 7  # Number of last conversations to remember
@@ -119,11 +117,13 @@ def config_options():
     Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
     st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
-    st.sidebar.button("Start Over", key="clear_conversation", on_click=init_messages)
+    if st.sidebar.button("Start Over", key="clear_conversation"):
+        st.session_state.show_content = False
+        init_messages()
 
 def init_messages():
     """Initialize chat history."""
-    if st.session_state.get("clear_conversation") or "messages" not in st.session_state:
+    if "messages" not in st.session_state:
         st.session_state.messages = []
         welcome_message = "Hello! I'm IKNOW, your study partner! 👋 Share your course topics with me, and I'll help you organize, understand, and excel in your learning journey! 📚 What can we explore together today? 🎓"
         st.session_state.messages.append({"role": "assistant", "content": welcome_message})
@@ -226,6 +226,10 @@ def main():
     """Main Streamlit application function."""
     st.title(":books: :mortar_board: Lecture Assistant with History")
 
+    # Initialize session state for content visibility
+    if "show_content" not in st.session_state:
+        st.session_state.show_content = True
+
     # Track previous category
     if "previous_category" not in st.session_state:
         st.session_state.previous_category = None
@@ -234,9 +238,10 @@ def main():
     init_messages()
 
     # Display chat messages from history on app rerun
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    if st.session_state.show_content:
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
     # Check for category change
     current_category = st.session_state.lec_category
@@ -272,7 +277,7 @@ def main():
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
         # Display related documents
-        if relative_paths:
+        if relative_paths and st.session_state.show_content:
             with st.sidebar.expander("Related Documents"):
                 for path in relative_paths:
                     cmd2 = f"select GET_PRESIGNED_URL(@DOCS, '{path}', 360) as URL_LINK from directory(@DOCS)"
