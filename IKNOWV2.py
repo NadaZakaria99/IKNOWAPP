@@ -122,10 +122,13 @@ svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].corte
 
 def config_options():
     """Configure sidebar options for the application."""
+    # Place the "New Chat" button at the top of the sidebar
+    st.sidebar.button("New Chat", key="clear_conversation", on_click=init_messages)
+
+    # Add other sidebar elements below the button
     Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
     st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
-    st.sidebar.button("New Chat", key="clear_conversation", on_click=init_messages)
 
 def init_messages():
     """Initialize chat history."""
@@ -299,15 +302,6 @@ def main():
 
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-        # # Display related documents
-        # if relative_paths:
-        #     with st.sidebar.expander("Related Documents"):
-        #         for path in relative_paths:
-        #             cmd2 = f"select GET_PRESIGNED_URL(@DOCS, '{path}', 360) as URL_LINK from directory(@DOCS)"
-        #             durl_link = session.sql(cmd2).to_pandas()
-        #             url_link = durl_link._get_value(0, 'URL_LINK')
-        #             url = f"Document: [{path}]({url_link})"
-        #             st.sidebar.markdown(url)
 
 if __name__ == "__main__":
     main()
