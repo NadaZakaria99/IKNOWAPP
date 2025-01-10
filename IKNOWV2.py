@@ -213,12 +213,11 @@ def complete_query(query, Course_Content):
     df_response = session.sql(cmd, params=['mistral-large2', prompt]).collect()
     res_text = df_response[0].RESPONSE
 
-    # Split the response by newlines to preserve structure
+    # Split the response into words for smooth streaming
     def stream_response():
-        for chunk in res_text.split("\n"):  # Split by newlines
-            if chunk.strip():  # Skip empty lines
-                yield chunk + "\n"  # Add a newline after each chunk
-                time.sleep(0.1)  # Simulate a delay for streaming effect
+        for word in res_text.split():  # Split by spaces for word-by-word streaming
+            yield word + " "  # Add a space after each word
+            time.sleep(0.05)  # Adjust delay for smoother streaming
 
     return stream_response(), relative_paths
 
