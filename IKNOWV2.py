@@ -137,9 +137,7 @@ def get_chat_history():
 def summarize_question_with_history(chat_history, question):
     """Summarize the chat history and current question for better context."""
     prompt = f"""
-        Based on the chat history below and the question, generate a query that extends the question
-        with the chat history provided. The query should be in natural language. 
-        Answer with only the query. Do not add any explanation.
+       You are IKNOW, a friendly and knowledgeable lecture assistant specializing in {Course_Content}. Your task is to provide clear, concise, and accurate answers to the user's question based on the provided context and chat history.
         <chat_history>
         {chat_history}
         </chat_history>
