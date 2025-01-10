@@ -15,15 +15,56 @@ st.markdown("""
         background-color: lightblue;
     }
 
-    /* Position the "Start Over" button at the bottom-right */
-    .start-over-button {
-        position: fixed;
-        bottom: 10px;
-        right: 10px;
-        z-index: 1000;
+    /* Sidebar styling */
+    .css-1d391kg {
+        background-color: #f0f2f6;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .css-1d391kg h1 {
+        color: #2c3e50;
+        font-size: 24px;
+    }
+    .css-1d391kg .stSelectbox, .css-1d391kg .stCheckbox, .css-1d391kg .stButton {
+        margin-bottom: 15px;
     }
 
-    /* Style the button */
+    /* Chat input box styling */
+    .stTextInput>div>div>input {
+        background-color: #ffffff;
+        border-radius: 20px;
+        padding: 10px 15px;
+        font-size: 16px;
+        border: 2px solid #2c3e50;
+    }
+    .stTextInput>div>div>input:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+    }
+
+    /* Chat message styling */
+    .stChatMessage {
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+    .stChatMessage.user {
+        background-color: #3498db;
+        color: white;
+    }
+    .stChatMessage.assistant {
+        background-color: #ecf0f1;
+        color: #2c3e50;
+    }
+
+    /* Sidebar header styling */
+    .css-1d391kg h1 {
+        font-size: 20px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    /* Sidebar button styling */
     .stButton>button {
         background-color: #3498db;
         color: white;
@@ -72,14 +113,15 @@ root = Root(session)
 svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].cortex_search_services[CORTEX_SEARCH_SERVICE]
 
 def config_options():
-    """Configure options for the application."""
+    """Configure sidebar options for the application."""
+    st.sidebar.button("Reset Chat", key="clear_conversation", on_click=init_messages)
     Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
-    st.selectbox('Select the lecture', Course_Content, key="lec_category")
-    st.checkbox('Remember chat history?', key="use_chat_history", value=True)
+    st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
+    st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
 
 def init_messages():
     """Initialize chat history."""
-    if "messages" not in st.session_state:
+    if st.session_state.get("clear_conversation") or "messages" not in st.session_state:
         st.session_state.messages = []
         welcome_message = "Hello! I'm IKNOW, your study partner! 👋 Share your course topics with me, and I'll help you organize, understand, and excel in your learning journey! 📚 What can we explore together today? 🎓"
         st.session_state.messages.append({"role": "assistant", "content": welcome_message})
@@ -159,11 +201,11 @@ def create_prompt(query, Course_Content):
 
     json_data = json.loads(prompt_context)
     relative_paths = set(item.get('relative_path', '') for item in json_data['results'])
-    return prompt, relative_paths
+    return prompt, relative_paths, json_data['results']
 
 def complete_query(query, Course_Content):
     """Complete the query using Snowflake Cortex with Mistral Large 2 model and stream the response."""
-    prompt, relative_paths = create_prompt(query, Course_Content)
+    prompt, relative_paths, chunks = create_prompt(query, Course_Content)
     cmd = """
         select snowflake.cortex.complete(?, ?) as response
     """
@@ -176,7 +218,7 @@ def complete_query(query, Course_Content):
             yield chunk + " "
             time.sleep(0.1)  # Simulate a delay for streaming effect
 
-    return stream_response(), relative_paths
+    return stream_response(), relative_paths, chunks
 
 def main():
     """Main Streamlit application function."""
@@ -186,7 +228,6 @@ def main():
     if "previous_category" not in st.session_state:
         st.session_state.previous_category = None
 
-    # Move lecture selection and chat history checkbox to the main content area
     config_options()
     init_messages()
 
@@ -215,7 +256,7 @@ def main():
 
         # Generate response
         current_category = st.session_state.lec_category
-        response_stream, relative_paths = complete_query(query, current_category)
+        response_stream, relative_paths, chunks = complete_query(query, current_category)
 
         # Display assistant response in a streaming fashion
         with st.chat_message("assistant"):
@@ -228,7 +269,7 @@ def main():
 
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-        # Display related documents
+        # Display related documents and chunks
         if relative_paths:
             with st.sidebar.expander("Related Documents"):
                 for path in relative_paths:
@@ -237,12 +278,11 @@ def main():
                     url_link = df_url_link._get_value(0, 'URL_LINK')
                     display_url = f"Document: [{path}]({url_link})"
                     st.sidebar.markdown(display_url)
-
-    # Add "Start Over" button at the bottom-right
-    st.markdown('<div class="start-over-button">', unsafe_allow_html=True)
-    if st.button("Start Over", key="clear_conversation", on_click=init_messages):
-        st.session_state.messages = []
-    st.markdown('</div>', unsafe_allow_html=True)
+            with st.sidebar.expander("Chunks Used"):
+                for chunk in chunks:
+                    st.sidebar.markdown(f"**Chunk:** {chunk['chunk']}")
+                    st.sidebar.markdown(f"**Category:** {chunk['category']}")
+                    st.sidebar.markdown(f"**Relative Path:** {chunk['relative_path']}")
 
 if __name__ == "__main__":
     main()
