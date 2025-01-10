@@ -199,7 +199,7 @@ def main():
     current_category = st.session_state.lec_category
     if (st.session_state.previous_category is not None and 
         current_category != st.session_state.previous_category):
-        category_message = f"I see you've switched to {current_category}! Let me help you find {current_category} Lecture! 👨‍🍳"
+        category_message = f"🎉 Switched to {current_category}! Let’s explore this week’s material together. What topic would you like to dive into? 📚"
         st.session_state.messages.append({"role": "assistant", "content": category_message})
         with st.chat_message("assistant"):
             st.markdown(category_message)
