@@ -10,9 +10,9 @@ import time
 # Custom CSS for styling
 st.markdown("""
     <style>
-    /* Hide the sidebar completely */
-    section[data-testid="stSidebar"] {
-        display: none;
+    /* Main app background */
+    .stApp {
+        background-color: lightblue;
     }
 
     /* Position the "Start Over" button at the bottom-right */
@@ -34,6 +34,11 @@ st.markdown("""
     }
     .stButton>button:hover {
         background-color: #2980b9;
+    }
+
+    /* Input box placeholder text */
+    .stTextInput>div>div>input::placeholder {
+        color: #95a5a6;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -67,10 +72,10 @@ root = Root(session)
 svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].cortex_search_services[CORTEX_SEARCH_SERVICE]
 
 def config_options():
-    """Configure sidebar options for the application."""
+    """Configure options for the application."""
     Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
-    st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
-    st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
+    st.selectbox('Select the lecture', Course_Content, key="lec_category")
+    st.checkbox('Remember chat history?', key="use_chat_history", value=True)
 
 def init_messages():
     """Initialize chat history."""
@@ -181,6 +186,7 @@ def main():
     if "previous_category" not in st.session_state:
         st.session_state.previous_category = None
 
+    # Move lecture selection and chat history checkbox to the main content area
     config_options()
     init_messages()
 
