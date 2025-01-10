@@ -6,3 +6,4 @@ llama-index-embeddings-huggingface
 langchain 
 langchain-huggingface
 langchain-community
+tavily-python
