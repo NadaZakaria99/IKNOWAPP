@@ -10,51 +10,20 @@ import time
 # Custom CSS for styling
 st.markdown("""
     <style>
-    /* Main app background */
-    .stApp {
-        background-color: lightblue;
-    }
-
     /* Hide the sidebar completely */
-    .css-1d391kg {
+    section[data-testid="stSidebar"] {
         display: none;
     }
 
-    /* Chat input box styling */
-    .stTextInput>div>div>input {
-        background-color: #ffffff;
-        border-radius: 20px;
-        padding: 10px 15px;
-        font-size: 16px;
-        border: 2px solid #2c3e50;
-    }
-    .stTextInput>div>div>input:focus {
-        border-color: #3498db;
-        box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
-    }
-
-    /* Chat message styling */
-    .stChatMessage {
-        padding: 10px;
-        border-radius: 10px;
-        margin-bottom: 10px;
-    }
-    .stChatMessage.user {
-        background-color: #3498db;
-        color: white;
-    }
-    .stChatMessage.assistant {
-        background-color: #ecf0f1;
-        color: #2c3e50;
-    }
-
-    /* Start Over button positioning */
+    /* Position the "Start Over" button at the bottom-right */
     .start-over-button {
         position: fixed;
         bottom: 10px;
         right: 10px;
         z-index: 1000;
     }
+
+    /* Style the button */
     .stButton>button {
         background-color: #3498db;
         color: white;
@@ -65,11 +34,6 @@ st.markdown("""
     }
     .stButton>button:hover {
         background-color: #2980b9;
-    }
-
-    /* Input box placeholder text */
-    .stTextInput>div>div>input::placeholder {
-        color: #95a5a6;
     }
     </style>
 """, unsafe_allow_html=True)
