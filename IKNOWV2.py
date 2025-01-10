@@ -193,7 +193,7 @@ def create_prompt(query, Course_Content):
     - Only provide information related to {Course_Content}.
     - If the query is not related to {Course_Content}, respond with: "I'm sorry, I can only assist with topics related to {Course_Content}."
     - Prioritize topics that align with the syllabus or current lecture needs.
-    - List all matching topics or resources as numbered options.
+    - List all matching topics or resources as numbered options,with each point written in a separate line.
     - Ask which topic they'd like to explore in more detail.
     - Ensure the answer is short and comprehensive.
 
