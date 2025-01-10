@@ -191,13 +191,25 @@ def create_prompt(query, Course_Content):
 
     json_data = json.loads(prompt_context)
     
-    # Check if we have relevant course content
-    if not json_data['results']:
-        # No relevant course content found, use web search
+    # Check if we have relevant course content by examining both results and content relevance
+    if not json_data['results'] or all(float(result.get('score', 0)) < 0.5 for result in json_data['results']):
+        # No relevant course content found or low relevance scores, use web search
         web_results = get_web_search_results(query)
+        
+        if isinstance(web_results, str) and "Error" in web_results:
+            # Handle web search error
+            prompt = f"""
+            I am IKNOW, and I notice this question isn't related to our {Course_Content} content.
+            I tried to search the web but encountered an error. Please ask a question related to {Course_Content} or try again later.
+            
+            User Query: {query}
+            Response (as IKNOW, study partner):
+            """
+            return prompt, set(), True
+            
         prompt = f"""
-        I am IKNOW, a friendly and witty assistant! While this question isn't directly related to our {Course_Content} content,
-        I've searched the web to help you. Here's what I found:
+        I am IKNOW, and since this question isn't related to our {Course_Content} content,
+        I've searched the web to help you. Here are the web search results:
 
         <web_search_results>
         {web_results}
@@ -205,7 +217,8 @@ def create_prompt(query, Course_Content):
 
         User Query: {query}
 
-        Please provide a helpful response based on these web search results, and mention that this information comes from web search.
+        Provide a comprehensive answer based on these web search results. Start your response with 
+        "Based on web search results," to clearly indicate the source of information.
         
         Response (as IKNOW, study partner):
         """
@@ -237,7 +250,6 @@ def create_prompt(query, Course_Content):
         """
         relative_paths = set(item.get('relative_path', '') for item in json_data['results'])
         return prompt, relative_paths, False
-
 def complete_query(query, Course_Content):
     """Complete the query using Snowflake Cortex with web search fallback."""
     prompt, relative_paths, web_search_used = create_prompt(query, Course_Content)
