@@ -90,11 +90,15 @@ SLIDE_WINDOW = 7  # Number of last conversations to remember
 CORTEX_SEARCH_DATABASE = st.secrets["snowflake"]["database"]
 CORTEX_SEARCH_SCHEMA = st.secrets["snowflake"]["schema"]
 CORTEX_SEARCH_SERVICE = "IKNOW_SEARCH_SERVICE_CS"
+TAVILY_API_KEY = st.secrets["tavily"]["api_key"]
 COLUMNS = [
     "chunk",
     "relative_path",
     "category"
 ]
+
+# Initialize Tavily client
+tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
 
 # Snowflake Connection and Session
 connection_params = {
@@ -112,12 +116,28 @@ session = Session.builder.configs(connection_params).create()
 root = Root(session)
 svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].cortex_search_services[CORTEX_SEARCH_SERVICE]
 
-# Initialize Tavily client
-tavily_client = TavilyClient(api_key=st.secrets["tavily"]["api_key"])
+def get_web_search_results(query):
+    """Perform web search using Tavily API when local context is insufficient."""
+    try:
+        search_result = tavily_client.search(
+            query=query,
+            search_depth="basic",
+            max_results=3
+        )
+        return search_result
+    except Exception as e:
+        st.error(f"Web search error: {str(e)}")
+        return None
+
+def has_relevant_context(prompt_context):
+    """Check if the Snowflake search returned relevant results."""
+    json_data = json.loads(prompt_context)
+    results = json_data.get('results', [])
+    return len(results) > 0 and any(len(result.get('chunk', '')) > 50 for result in results)
 
 def config_options():
     """Configure sidebar options for the application."""
-    Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
+    Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen', 'weekfifteen']
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
     st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
     st.sidebar.button("Start Over", key="clear_conversation", on_click=init_messages)
@@ -160,13 +180,13 @@ def get_similar_chunks_search_service(query, Course_Content):
     if Course_Content == "ALL":
         response = svc.search(query, COLUMNS, limit=NUM_CHUNKS)
     else:
-        filter_obj = {"@eq": {"category": Course_Content}}  # Use "category" instead of "COURSE_CONTENT"
+        filter_obj = {"@eq": {"category": Course_Content}}
         response = svc.search(query, COLUMNS, filter=filter_obj, limit=NUM_CHUNKS)
     st.sidebar.json(response.json())
     return response.json()
 
 def create_prompt(query, Course_Content):
-    """Create a prompt for the LLM with context from search results and chat history."""
+    """Create a prompt with context from both Snowflake and web search when needed."""
     if st.session_state.use_chat_history:
         chat_history = get_chat_history()
         if chat_history:
@@ -178,8 +198,26 @@ def create_prompt(query, Course_Content):
         prompt_context = get_similar_chunks_search_service(query, Course_Content)
         chat_history = ""
 
+    # Check if we need web search
+    if not has_relevant_context(prompt_context):
+        st.info("Searching web for additional information...")
+        web_results = get_web_search_results(query)
+        if web_results:
+            web_context = "\n".join([
+                f"Source: {result['url']}\n{result['content']}"
+                for result in web_results['results'][:3]
+            ])
+            prompt_context = {
+                "results": [{
+                    "chunk": web_context,
+                    "relative_path": "web_search_results",
+                    "category": "external"
+                }]
+            }
+            prompt_context = json.dumps(prompt_context)
+
     prompt = f"""
-    I am IKNOW, a friendly and witty lecture assistant specializing in helping with {Course_Content} topics! I love assisting students by explaining concepts and finding the best study resources from our collection.
+    I am IKNOW, a friendly and witty lecture assistant specializing in helping with {Course_Content} topics! I love assisting students by explaining concepts and finding the best study resources from our collection and the web when needed.
 
     Conversation Flow:
     1. When suggesting lecture content or topics:
@@ -205,7 +243,7 @@ def create_prompt(query, Course_Content):
     User Query: {query}
     Current Course_Content: {Course_Content}
 
-    Response (as IKNOW,study partner):
+    Response (as IKNOW, study partner):
     """
 
     json_data = json.loads(prompt_context)
@@ -215,28 +253,6 @@ def create_prompt(query, Course_Content):
 def complete_query(query, Course_Content):
     """Complete the query using Snowflake Cortex with Mistral Large 2 model."""
     prompt, relative_paths = create_prompt(query, Course_Content)
-    
-    # Check if the local search returned any results
-    if not relative_paths:
-        # Fallback to Tavily web search
-        try:
-            web_search_results = tavily_client.search(query)
-            if web_search_results and isinstance(web_search_results, list):  # Ensure it's a list
-                # Format the web search results into a response
-                web_response = "Here are some web search results that might help:\n\n"
-                for result in web_search_results[:3]:  # Limit to top 3 results
-                    if isinstance(result, dict) and "title" in result and "url" in result:  # Ensure result is a dictionary with required keys
-                        web_response += f"- [{result['title']}]({result['url']})\n"
-                    else:
-                        web_response += "- No additional details available.\n"
-                return web_response, []
-            else:
-                return "No relevant results found in the web search.", []
-        except Exception as e:
-            st.error(f"An error occurred during the web search: {e}")
-            return "Unable to perform a web search at the moment. Please try again later.", []
-    
-    # If local search returned results, proceed as usual
     cmd = """
         select snowflake.cortex.complete(?, ?) as response
     """
@@ -280,20 +296,15 @@ def main():
         # Generate response
         current_category = st.session_state.lec_category
         response, relative_paths = complete_query(query, current_category)
-        
-        # Handle the response differently based on whether it's from local search or web search
-        if isinstance(response, str):  # Web search response
-            res_text = response
-        else:  # Local search response
-            res_text = response[0].RESPONSE
+        res_text = response[0].RESPONSE
 
         # Display assistant response
         with st.chat_message("assistant"):
             st.markdown(res_text)
         st.session_state.messages.append({"role": "assistant", "content": res_text})
 
-        # Display related documents (only for local search)
-        if relative_paths:
+        # Display related documents
+        if relative_paths and "web_search_results" not in relative_paths:
             with st.sidebar.expander("Related Documents"):
                 for path in relative_paths:
                     cmd2 = f"select GET_PRESIGNED_URL(@DOCS, '{path}', 360) as URL_LINK from directory(@DOCS)"
