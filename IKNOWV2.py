@@ -1,5 +1,3 @@
-in my code can i integrate a web search like tavily with the queries who dont have a related context ?
-
 import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.context import get_active_session
