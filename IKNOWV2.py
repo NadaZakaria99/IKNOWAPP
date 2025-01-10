@@ -252,7 +252,7 @@ def complete_query(query, Course_Content):
 
 def main():
     """Main Streamlit application function."""
-    st.title(":books: :mortar_board: Lecture Assistant with History")
+    st.title(":books: :mortar_board: IKNOW Assistant ")
 
     # Track previous category
     if "previous_category" not in st.session_state:
@@ -299,15 +299,15 @@ def main():
 
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-        # Display related documents
-        if relative_paths:
-            with st.sidebar.expander("Related Documents"):
-                for path in relative_paths:
-                    cmd2 = f"select GET_PRESIGNED_URL(@DOCS, '{path}', 360) as URL_LINK from directory(@DOCS)"
-                    df_url_link = session.sql(cmd2).to_pandas()
-                    url_link = df_url_link._get_value(0, 'URL_LINK')
-                    display_url = f"Document: [{path}]({url_link})"
-                    st.sidebar.markdown(display_url)
+        # # Display related documents
+        # if relative_paths:
+        #     with st.sidebar.expander("Related Documents"):
+        #         for path in relative_paths:
+        #             cmd2 = f"select GET_PRESIGNED_URL(@DOCS, '{path}', 360) as URL_LINK from directory(@DOCS)"
+        #             durl_link = session.sql(cmd2).to_pandas()
+        #             url_link = durl_link._get_value(0, 'URL_LINK')
+        #             url = f"Document: [{path}]({url_link})"
+        #             st.sidebar.markdown(url)
 
 if __name__ == "__main__":
     main()
