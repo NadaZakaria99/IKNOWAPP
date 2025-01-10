@@ -168,7 +168,7 @@ def create_prompt(query, Course_Content):
         chat_history = get_chat_history()
         if chat_history:
             question_summary = summarize_question_with_history(chat_history, query)
-            prompt_context = get_similar_chunks_search_service(question_summary, category)
+            prompt_context = get_similar_chunks_search_service(question_summary, Course_Content)
         else:
             prompt_context = get_similar_chunks_search_service(query, Course_Content)
     else:
