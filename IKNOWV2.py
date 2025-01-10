@@ -113,7 +113,12 @@ root = Root(session)
 svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].cortex_search_services[CORTEX_SEARCH_SERVICE]
 
 # Initialize TavilySearchResults tool with the API key from secrets.toml
-web_search_tool = TavilySearchResults(k=3, tavily_api_key=st.secrets["tavily"]["tavily_api_key"])
+try:
+    tavily_api_key = st.secrets["tavily"]["tavily_api_key"]
+    web_search_tool = TavilySearchResults(k=3, tavily_api_key=tavily_api_key)
+except KeyError:
+    st.error("Tavily API key not found in secrets.toml. Please add it and restart the app.")
+    st.stop()
 
 def config_options():
     """Configure sidebar options for the application."""
