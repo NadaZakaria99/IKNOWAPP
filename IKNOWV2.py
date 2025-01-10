@@ -57,7 +57,7 @@ st.markdown("""
         margin-bottom: 10px;
     }
     .stChatMessage.user {
-        background-color:blue;
+        background-color:#3498db;
         color: white;
     }
     .stChatMessage.assistant {
@@ -74,7 +74,7 @@ st.markdown("""
 
     /* Sidebar button styling */
     .stButton>button {
-        background-color: #3498db;
+        background-color:green;
         color: black;
         border-radius: 5px;
         padding: 10px 20px;
