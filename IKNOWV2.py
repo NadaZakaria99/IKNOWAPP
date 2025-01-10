@@ -1,3 +1,4 @@
+###########with stream
 import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.context import get_active_session
@@ -84,6 +85,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
 # Configuration
 NUM_CHUNKS = 3  # Number of chunks to retrieve
 SLIDE_WINDOW = 7  # Number of last conversations to remember
@@ -114,10 +116,10 @@ svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].corte
 
 def config_options():
     """Configure sidebar options for the application."""
-    st.sidebar.button("Reset Chat", key="clear_conversation", on_click=init_messages)
     Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
     st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
+    st.sidebar.button("Start Over", key="clear_conversation", on_click=init_messages)
 
 def init_messages():
     """Initialize chat history."""
@@ -201,11 +203,11 @@ def create_prompt(query, Course_Content):
 
     json_data = json.loads(prompt_context)
     relative_paths = set(item.get('relative_path', '') for item in json_data['results'])
-    return prompt, relative_paths, json_data['results']
+    return prompt, relative_paths
 
 def complete_query(query, Course_Content):
     """Complete the query using Snowflake Cortex with Mistral Large 2 model and stream the response."""
-    prompt, relative_paths, chunks = create_prompt(query, Course_Content)
+    prompt, relative_paths = create_prompt(query, Course_Content)
     cmd = """
         select snowflake.cortex.complete(?, ?) as response
     """
@@ -218,7 +220,7 @@ def complete_query(query, Course_Content):
             yield chunk + " "
             time.sleep(0.1)  # Simulate a delay for streaming effect
 
-    return stream_response(), relative_paths, chunks
+    return stream_response(), relative_paths
 
 def main():
     """Main Streamlit application function."""
@@ -256,7 +258,7 @@ def main():
 
         # Generate response
         current_category = st.session_state.lec_category
-        response_stream, relative_paths, chunks = complete_query(query, current_category)
+        response_stream, relative_paths = complete_query(query, current_category)
 
         # Display assistant response in a streaming fashion
         with st.chat_message("assistant"):
@@ -269,7 +271,7 @@ def main():
 
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-        # Display related documents and chunks
+        # Display related documents
         if relative_paths:
             with st.sidebar.expander("Related Documents"):
                 for path in relative_paths:
@@ -278,11 +280,6 @@ def main():
                     url_link = df_url_link._get_value(0, 'URL_LINK')
                     display_url = f"Document: [{path}]({url_link})"
                     st.sidebar.markdown(display_url)
-            with st.sidebar.expander("Chunks Used"):
-                for chunk in chunks:
-                    st.sidebar.markdown(f"**Chunk:** {chunk['chunk']}")
-                    st.sidebar.markdown(f"**Category:** {chunk['category']}")
-                    st.sidebar.markdown(f"**Relative Path:** {chunk['relative_path']}")
 
 if __name__ == "__main__":
     main()
