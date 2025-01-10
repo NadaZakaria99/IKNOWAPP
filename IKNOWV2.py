@@ -9,10 +9,10 @@ import time
 from langchain_community.tools.tavily_search import TavilySearchResults
 
 # Set the Tavily API key
-TAVILY_API_KEY = "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"
+TAVILY_API_KEY = "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"
 
 # Initialize the TavilySearchResults tool with the API key
-web_search_tool = TavilySearchResults(k=3, tavily_api_key=TAVILY_API_KEY)
+web_search_tool = TavilySearchResults(tavily_api_key=TAVILY_API_KEY, k=3)
 
 # Custom CSS for styling
 st.markdown("""
@@ -223,7 +223,7 @@ def complete_query(query, Course_Content):
     # Check if the response indicates that it can only assist with topics related to the selected course content
     if res_text.strip() == f"I'm sorry, I can only assist with topics related to {Course_Content}.":
         # Perform a web search using the TavilySearchResults tool
-        web_search_results = web_search_tool.invoke(query)
+        web_search_results = web_search_tool.invoke({"query": query})
         
         # Create a new prompt with the web search results and the original query
         web_search_prompt = f"""
