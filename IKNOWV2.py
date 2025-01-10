@@ -7,12 +7,12 @@ import pandas as pd
 import json
 import time
 from langchain_community.tools.tavily_search import TavilySearchResults
-
+import os
+os.environ["TAVILY_API_KEY"] = "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"
 # Set the Tavily API key
-TAVILY_API_KEY = "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"
+web_search_tool = TavilySearchResults(k=3)
 
-# Initialize the TavilySearchResults tool with the API key
-web_search_tool = TavilySearchResults(tavily_api_key=TAVILY_API_KEY, k=3)
+
 
 # Custom CSS for styling
 st.markdown("""
