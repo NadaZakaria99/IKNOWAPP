@@ -81,8 +81,16 @@ st.markdown("""
     .stTextInput>div>div>input::placeholder {
         color: #95a5a6;
     }
+
+    /* Start Over button positioning */
+    .start-over-button {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
     </style>
 """, unsafe_allow_html=True)
+
 
 # Configuration
 NUM_CHUNKS = 3  # Number of chunks to retrieve
@@ -117,9 +125,6 @@ def config_options():
     Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
     st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
-    if st.sidebar.button("Start Over", key="clear_conversation"):
-        st.session_state.show_content = False
-        init_messages()
 
 def init_messages():
     """Initialize chat history."""
@@ -226,10 +231,6 @@ def main():
     """Main Streamlit application function."""
     st.title(":books: :mortar_board: Lecture Assistant with History")
 
-    # Initialize session state for content visibility
-    if "show_content" not in st.session_state:
-        st.session_state.show_content = True
-
     # Track previous category
     if "previous_category" not in st.session_state:
         st.session_state.previous_category = None
@@ -238,10 +239,9 @@ def main():
     init_messages()
 
     # Display chat messages from history on app rerun
-    if st.session_state.show_content:
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
     # Check for category change
     current_category = st.session_state.lec_category
@@ -277,7 +277,7 @@ def main():
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
         # Display related documents
-        if relative_paths and st.session_state.show_content:
+        if relative_paths:
             with st.sidebar.expander("Related Documents"):
                 for path in relative_paths:
                     cmd2 = f"select GET_PRESIGNED_URL(@DOCS, '{path}', 360) as URL_LINK from directory(@DOCS)"
@@ -285,6 +285,12 @@ def main():
                     url_link = df_url_link._get_value(0, 'URL_LINK')
                     display_url = f"Document: [{path}]({url_link})"
                     st.sidebar.markdown(display_url)
+
+    # Add "Start Over" button below the chat input
+    st.markdown('<div class="start-over-button">', unsafe_allow_html=True)
+    if st.button("Start Over", key="clear_conversation", on_click=init_messages):
+        st.session_state.messages = []
+    st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
