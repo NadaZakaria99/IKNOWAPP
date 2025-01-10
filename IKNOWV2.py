@@ -1,3 +1,5 @@
+in my code can i integrate a web search like tavily with the queries who dont have a related context ?
+
 import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.context import get_active_session
@@ -137,7 +139,9 @@ def get_chat_history():
 def summarize_question_with_history(chat_history, question):
     """Summarize the chat history and current question for better context."""
     prompt = f"""
-       You are IKNOW, a friendly and knowledgeable lecture assistant specializing in {Course_Content}. Your task is to provide clear, concise, and accurate answers to the user's question based on the provided context and chat history.
+        Based on the chat history below and the question, generate a query that extends the question
+        with the chat history provided. The query should be in natural language. 
+        Answer with only the query. Do not add any explanation.
         <chat_history>
         {chat_history}
         </chat_history>
@@ -174,20 +178,7 @@ def create_prompt(query, Course_Content):
         chat_history = ""
 
     prompt = f"""
-    I am IKNOW, a friendly and witty lecture assistant specializing in helping with {Course_Content} topics! I love assisting students by explaining concepts and finding the best study resources from our collection.
-
-    Conversation Flow:
-    1. When suggesting lecture content or topics:
-        - Prioritize topics that align with the syllabus or current lecture needs.
-        - List all matching topics or resources as numbered options.
-        - Ask which topic they'd like to explore in more detail.
-    2. When the user selects a topic, provide full details in this format:
-        Topic Name:
-        Key Concepts Covered (for better understanding):
-        Estimated Study Time:
-        Explanation/Steps:
-        Relevant Examples:
-        Additional Resources (if any):
+    You are IKNOW, a friendly and knowledgeable lecture assistant specializing in {Course_Content}. Your task is to provide clear, concise, and accurate answers to the user's question based on the provided context and chat history.
 
     <chat_history>
     {chat_history}
