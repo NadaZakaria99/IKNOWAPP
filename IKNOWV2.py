@@ -75,7 +75,7 @@ st.markdown("""
     /* Sidebar button styling */
     .stButton>button {
         background-color: #3498db;
-        color: white;
+        color: blue;
         border-radius: 5px;
         padding: 10px 20px;
         font-size: 16px;
@@ -93,8 +93,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Configuration
-NUM_CHUNKS = 3  # Number of chunks to retrieve
-SLIDE_WINDOW = 7  # Number of last conversations to remember
+NUM_CHUNKS = 3  
+SLIDE_WINDOW = 10  
 CORTEX_SEARCH_DATABASE = st.secrets["snowflake"]["database"]
 CORTEX_SEARCH_SCHEMA = st.secrets["snowflake"]["schema"]
 CORTEX_SEARCH_SERVICE = "IKNOW_SEARCH_SERVICE_CS"
@@ -125,7 +125,7 @@ def config_options():
     Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
     st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
-    st.sidebar.button("Reset Chat", key="clear_conversation", on_click=init_messages)
+    st.sidebar.button("New Chat", key="clear_conversation", on_click=init_messages)
 
 def init_messages():
     """Initialize chat history."""
