@@ -124,7 +124,7 @@ def config_options():
     """Configure sidebar options for the application."""
     Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
-    #st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
+    st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
     st.sidebar.button("Reset Chat", key="clear_conversation", on_click=init_messages)
 
 def init_messages():
