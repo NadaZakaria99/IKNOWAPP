@@ -1,3 +1,8 @@
+### working and say i dont know
+
+
+import time
+
 import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.context import get_active_session
@@ -5,19 +10,6 @@ from snowflake.core import Root
 import snowflake.connector
 import pandas as pd
 import json
-from langchain_community.tools.tavily_search import TavilySearchResults
-import logging
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Initialize Tavily search with error handling
-try:
-    tavily_search = TavilySearchResults(api_key=st.secrets["TAVILY_API_KEY"])
-except Exception as e:
-    logger.error(f"Failed to initialize Tavily search: {str(e)}")
-    tavily_search = None
 
 # Custom CSS for styling
 st.markdown("""
@@ -96,13 +88,18 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
 # Configuration
-NUM_CHUNKS = 3
-SLIDE_WINDOW = 7
+NUM_CHUNKS = 3  # Number of chunks to retrieve
+SLIDE_WINDOW = 7  # Number of last conversations to remember
 CORTEX_SEARCH_DATABASE = st.secrets["snowflake"]["database"]
 CORTEX_SEARCH_SCHEMA = st.secrets["snowflake"]["schema"]
 CORTEX_SEARCH_SERVICE = "IKNOW_SEARCH_SERVICE_CS"
-COLUMNS = ["chunk", "relative_path", "category"]
+COLUMNS = [
+    "chunk",
+    "relative_path",
+    "category"
+]
 
 # Snowflake Connection and Session
 connection_params = {
@@ -115,30 +112,14 @@ connection_params = {
     "role": st.secrets["snowflake"]["role"],
 }
 
+# Get active Snowflake session
 session = Session.builder.configs(connection_params).create()
 root = Root(session)
 svc = root.databases[CORTEX_SEARCH_DATABASE].schemas[CORTEX_SEARCH_SCHEMA].cortex_search_services[CORTEX_SEARCH_SERVICE]
 
-def get_web_search_results(query):
-    """Perform web search using Tavily."""
-    if tavily_search is None:
-        logger.warning("Tavily search is not initialized")
-        return ""
-        
-    try:
-        results = tavily_search.invoke({"query": query})
-        # Extract and format the search results
-        web_results = "\n".join([d["content"] for d in results])
-        return web_results
-    except Exception as e:
-        logger.error(f"Web search error: {str(e)}")
-        return ""
-
 def config_options():
     """Configure sidebar options for the application."""
-    Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 
-                     'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 
-                     'weekthirteen', 'weekfourteen', 'weekfifteen']
+    Course_Content = ['weekone', 'weektwo', 'weekthree', 'weekfour', 'weekfive', 'weeksix', 'weekseven', 'weekeight', 'weeknine', 'weekten', 'weekeleven', 'weektwelve', 'weekthirteen', 'weekfourteen','weekfifteen']
     st.sidebar.selectbox('Select the lecture', Course_Content, key="lec_category")
     st.sidebar.checkbox('Remember chat history?', key="use_chat_history", value=True)
     st.sidebar.button("Start Over", key="clear_conversation", on_click=init_messages)
@@ -181,21 +162,13 @@ def get_similar_chunks_search_service(query, Course_Content):
     if Course_Content == "ALL":
         response = svc.search(query, COLUMNS, limit=NUM_CHUNKS)
     else:
-        filter_obj = {"@eq": {"category": Course_Content}}
+        filter_obj = {"@eq": {"category": Course_Content}}  # Use "category" instead of "COURSE_CONTENT"
         response = svc.search(query, COLUMNS, filter=filter_obj, limit=NUM_CHUNKS)
     st.sidebar.json(response.json())
     return response.json()
 
 def create_prompt(query, Course_Content):
     """Create a prompt for the LLM with context from search results and chat history."""
-    # Handle basic greetings directly without search
-    greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]
-    if query.lower().strip() in greetings:
-        prompt = """
-        I am IKNOW, your friendly study partner! 👋 I'm here to help you understand your course materials and answer your questions. What would you like to learn about today?
-        """
-        return prompt, set(), False
-
     if st.session_state.use_chat_history:
         chat_history = get_chat_history()
         if chat_history:
@@ -207,83 +180,88 @@ def create_prompt(query, Course_Content):
         prompt_context = get_similar_chunks_search_service(query, Course_Content)
         chat_history = ""
 
+    prompt = f"""
+    I am IKNOW, a friendly and witty lecture assistant specializing in helping with {Course_Content} topics! I love assisting students by explaining concepts and finding the best study resources from our collection.
+
+    **Important Instructions:**
+    - Only provide information related to {Course_Content}.
+    - If the query is not related to {Course_Content}, respond with: "I'm sorry, I can only assist with topics related to {Course_Content}."
+    - Prioritize topics that align with the syllabus or current lecture needs.
+    - List all matching topics or resources as numbered options.
+    - Ask which topic they'd like to explore in more detail.
+
+    <chat_history>
+    {chat_history}
+    </chat_history>
+
+    <context>
+    {prompt_context}
+    </context>
+
+    User Query: {query}
+    Current Course_Content: {Course_Content}
+
+    Response (as IKNOW,study partner):
+    """
+
     json_data = json.loads(prompt_context)
+    relative_paths = set(item.get('relative_path', '') for item in json_data['results'])
+    return prompt, relative_paths
+def complete_query_streaming(query, Course_Content):
+    """Complete the query using Snowflake Cortex with streaming response."""
+    prompt, relative_paths = create_prompt(query, Course_Content)
     
-    # Check if we have relevant course content
-    if not json_data['results']:
-        # No course content found, try web search
-        web_results = get_web_search_results(query)
+    # Initialize the streaming placeholder
+    message_placeholder = st.empty()
+    full_response = ""
+    
+    # Use Snowflake's streaming completion
+    cmd = """
+        select snowflake.cortex.complete_stream(
+            'mistral-large2',
+            ?,
+            object_construct('temperature', 0.7, 'max_tokens', 1024)
+        ) as response
+    """
+    
+    # Execute the streaming query
+    df_stream = session.sql(cmd, params=[prompt]).collect()
+    
+    # Process the streaming response
+    for row in df_stream:
+        chunk = row['RESPONSE']
+        full_response += chunk
         
-        if web_results:
-            prompt = f"""
-            I am IKNOW, and since this question isn't related to our {Course_Content} content,
-            I've searched the web to help you. Here are the relevant results:
-
-            <web_search_results>
-            {web_results}
-            </web_search_results>
-
-            User Query: {query}
-
-            Please provide a helpful response based on these web search results. Make sure to mention that 
-            this information comes from web search. Keep the response concise and relevant.
-
-            Response (as IKNOW, study partner):
-            """
-            return prompt, set(), True
-        else:
-            # If web search fails
-            prompt = f"""
-            I am IKNOW, and I notice this question isn't related to our {Course_Content} content.
-            I apologize, but I'm unable to perform a web search at the moment. Please try asking about 
-            {Course_Content} topics, and I'll be happy to help!
-            """
-            return prompt, set(), False
-
-    else:
-        prompt = f"""
-        I am IKNOW, a friendly and witty lecture assistant specializing in helping with {Course_Content} topics! I love assisting students by explaining concepts and finding the best study resources from our collection.
-
-        **Important Instructions:**
-        - Only provide information related to {Course_Content}.
-        - Prioritize topics that align with the syllabus or current lecture needs.
-        - List all matching topics or resources as numbered options.
-        - Ask which topic they'd like to explore in more detail.
-
-        <chat_history>
-        {chat_history}
-        </chat_history>
-
-        <context>
-        {prompt_context}
-        </context>
-
-        User Query: {query}
-        Current Course_Content: {Course_Content}
-
-        Response (as IKNOW, study partner):
-        """
-        relative_paths = set(item.get('relative_path', '') for item in json_data['results'])
-        return prompt, relative_paths, False
+        # Update the message placeholder with the accumulated response
+        message_placeholder.markdown(full_response + "▌")
+        time.sleep(0.01)  # Add a small delay for smoother streaming
+    
+    # Final update without the cursor
+    message_placeholder.markdown(full_response)
+    
+    return full_response, relative_paths
 
 def complete_query(query, Course_Content):
-    """Complete the query using Snowflake Cortex with web search fallback."""
-    prompt, relative_paths, web_search_used = create_prompt(query, Course_Content)
-    cmd = "select snowflake.cortex.complete(?, ?) as response"
+    """Complete the query using Snowflake Cortex with Mistral Large 2 model."""
+    prompt, relative_paths = create_prompt(query, Course_Content)
+    cmd = """
+        select snowflake.cortex.complete(?, ?) as response
+    """
     df_response = session.sql(cmd, params=['mistral-large2', prompt]).collect()
-    return df_response, relative_paths, web_search_used
+    return df_response, relative_paths
 
 def main():
     """Main Streamlit application function."""
-    st.title(":books: :mortar_board: Enhanced Lecture Assistant with Web Search")
+    st.title(":books: :mortar_board: Lecture Assistant with History")
 
+    # Track previous category
     if "previous_category" not in st.session_state:
         st.session_state.previous_category = None
 
     config_options()
     init_messages()
 
-    # Display chat messages from history
+    # Display chat messages from history on app rerun
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
@@ -300,24 +278,23 @@ def main():
     st.session_state.previous_category = current_category
 
     # Accept user input
+   # Accept user input
     if query := st.chat_input("What topics do you have?"):
+        # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": query})
         with st.chat_message("user"):
             st.markdown(query)
 
-        current_category = st.session_state.lec_category
-        response, relative_paths, web_search_used = complete_query(query, current_category)
-        res_text = response[0].RESPONSE
-
+        # Generate streaming response
         with st.chat_message("assistant"):
-            st.markdown(res_text)
-        st.session_state.messages.append({"role": "assistant", "content": res_text})
+            current_category = st.session_state.lec_category
+            response_text, relative_paths = complete_query_streaming(query, current_category)
+            
+            # Add the complete response to chat history after streaming
+            st.session_state.messages.append({"role": "assistant", "content": response_text})
 
-        # Display source information
-        if web_search_used:
-            with st.sidebar.expander("Search Source"):
-                st.markdown("🌐 This response was generated using web search results")
-        elif relative_paths:
+        # Display related documents
+        if relative_paths:
             with st.sidebar.expander("Related Documents"):
                 for path in relative_paths:
                     cmd2 = f"select GET_PRESIGNED_URL(@DOCS, '{path}', 360) as URL_LINK from directory(@DOCS)"
