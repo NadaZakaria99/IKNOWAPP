@@ -96,7 +96,7 @@ st.markdown("""
  
 CORTEX_SEARCH_DATABASE = st.secrets["snowflake"]["database"]
 CORTEX_SEARCH_SCHEMA = st.secrets["snowflake"]["schema"]
-CORTEX_SEARCH_SERVICE = st.secrets["snowflake"]["search"]
+CORTEX_SEARCH_SERVICE = "IKNOW_SEARCH_SERVICE_CS"
 COLUMNS = [
     "chunk",
     "relative_path",
