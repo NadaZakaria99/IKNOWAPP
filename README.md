@@ -1,1 +1,1 @@
-# IKNOWAPP
+# IKNOW - Your Study Partner
