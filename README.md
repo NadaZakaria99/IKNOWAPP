@@ -38,9 +38,7 @@ cd IKNOW
    [snowflake]
 
    account = "your_account"
-
    user = "your_user"
-
    password = "your_password"
 
    warehouse = "your_warehouse"
