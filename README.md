@@ -63,3 +63,21 @@ cd IKNOW
 - sql_queries.txt: Contains the SQL queries used to set up the Snowflake database and schema and cortex search.
 - upload_your_files.py: A script to upload study materials to Snowflake.
 - TruLens_Eval.ipynb: A Jupyter notebook used to evaluate the RAG system's performance.
+
+# Usage
+
+# How It Works
+IKNOW leverages a combination of Snowflake Cortex, Mistral Large 2 model and Tavily Search to provide accurate, context-aware, and real-time responses to your study-related queries. Here's a detailed breakdown of how it works:
+1. User Query:
+   The user inputs a question or query related to their study material
+2. Context Retrieval:
+   IKNOW uses Snowflake Cortex Search to retrieve relevant chunks of text from the study materials stored in the Snowflake database. The search is filtered based on the selected lecture or week to ensure the context is relevant.
+3. Prompt Generation:
+   A prompt is dynamically generated using the retrieved context, the user's query, and the chat history (if enabled). The prompt is designed to guide the Mistral Large 2 model to provide a concise and accurate response.
+4. Response Generation with Mistral Large 2:
+The generated prompt is passed to Snowflake Cortex, which uses the Mistral Large 2 model to generate a response.
+5. Web Search Integration (if needed):
+   If the query cannot be answered using the study material, IKNOW performs a web search using Tavily Search. The search results are filtered and summarized, and the response is generated using the Mistral Large 2 model 
+   to ensure accuracy and relevance. A note is added to indicate that the answer is based on a web search.
+
+
