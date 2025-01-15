@@ -97,7 +97,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - Snowflake Cortex: Learned how to leverage Snowflake Cortex for advanced data processing and querying.
 - Evaluation Metrics: Learned how to use TruLens to evaluate the performance of RAG systems based on relevance and groundedness.
 
-IKNOW is here to make your study sessions more productive and less stressful. Give it a try and experience the future of learning! 🚀
+### IKNOW is here to make your study sessions more productive and less stressful. Give it a try and experience the future of learning! 🚀
 
 
 
