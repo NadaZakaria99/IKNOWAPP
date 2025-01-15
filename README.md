@@ -79,5 +79,7 @@ The generated prompt is passed to Snowflake Cortex, which uses the Mistral Large
 5. Web Search Integration (if needed):
    If the query cannot be answered using the study material, IKNOW performs a web search using Tavily Search. The search results are filtered and summarized, and the response is generated using the Mistral Large 2 model 
    to ensure accuracy and relevance. A note is added to indicate that the answer is based on a web search.
+6.Streaming Output:
+  The response is streamed to the user in real-time, providing a smooth and interactive experience. This feature enhances user engagement and makes the interaction feel more natural.
 
 
