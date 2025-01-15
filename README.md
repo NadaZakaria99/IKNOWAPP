@@ -56,3 +56,10 @@ cd IKNOW
    TAVILY_API_KEY = "your_tavily_api_key"
    
 5. Run the Application: streamlit run IKNOW.py
+
+# File Details
+- IKNOW.py: The main Streamlit application file that contains the logic for the study assistant.
+- requirements.txt: Lists all the Python dependencies required to run the application.
+- sql_queries.txt: Contains the SQL queries used to set up the Snowflake database and schema and cortex search.
+- upload_your_files.py: A script to upload study materials to Snowflake.
+- TruLens_Eval.ipynb: A Jupyter notebook used to evaluate the RAG system's performance.
