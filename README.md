@@ -84,6 +84,7 @@ The generated prompt is passed to Snowflake Cortex, which uses the Mistral Large
 
 # What's Next for IKNOW?
 - Multi-Language Support: Expand support for multiple languages to cater to a global audience.
+- Voice-based interaction for hands-free assistance.
 
 # License
 This project is licensed under the MIT License. See the LICENSE file for details.
