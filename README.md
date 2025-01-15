@@ -21,3 +21,28 @@ IKNOW is designed to make studying less stressful and more productive. It’s li
 
 # Setup and Installation
 ## Prerequisites
+Before you begin, ensure you have the following installed:
+- Python 3.9 or higher
+- Streamlit
+- Snowflake Snowpark Python
+- Snowflake Core
+- LangChain
+- Tavily Python
+## Installation Steps
+1. Clone the Repository: git clone https://github.com/yourusername/IKNOW.git
+cd IKNOW
+2. Install Dependencies: pip install -r requirements.txt
+3. Set Up Snowflake Credentials:
+   Create a secrets.toml file in the .streamlit directory with your Snowflake credentials:
+       [snowflake]
+    account = "your_account"
+    user = "your_user"
+    password = "your_password"
+    warehouse = "your_warehouse"
+    database = "your_database"
+    schema = "your_schema"
+    role = "your_role"
+    
+    [secrets]
+    TAVILY_API_KEY = "your_tavily_api_key"
+4. Run the Application: streamlit run IKNOW.py
