@@ -19,3 +19,5 @@ IKNOW is more than just a study tool it's your 24/7 study partner that’s alway
 - Streaming Responses for Real-Time Learning: With its real-time streaming output, IKNOW makes learning interactive and engaging, helping you grasp concepts faster and more effectively.
 IKNOW is designed to make studying less stressful and more productive. It’s like having a patient, knowledgeable tutor in your pocket, ready to help you succeed anytime, anywhere.
 
+# Setup and Installation
+## Prerequisites
