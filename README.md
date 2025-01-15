@@ -1,5 +1,7 @@
 # IKNOW - Your Study Partner
 # Project Overview
+IKNOW is an AI-powered study partner that leverages advanced technologies to revolutionize the way you learn. It integrates Snowpark Cortex Search for efficient retrieval of relevant study materials and uses the Mistral Large-2 model for generating accurate and context-aware responses. Whether you need lecture summaries, key exam topics, or intelligent web-based explanations, IKNOW provides real-time assistance through a user-friendly interface, making it your ultimate study partner.
+
 # Key Features
 - Interactive Study Assistant: IKNOW acts as a conversational AI study partner, allowing you to ask questions and get detailed, context-aware answers.
 - Lecture Summarization: IKNOW can summarize your lecture materials, highlighting the most important points and key concepts.
