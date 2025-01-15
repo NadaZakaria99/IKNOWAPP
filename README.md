@@ -13,7 +13,7 @@ IKNOW is an AI-powered study partner that leverages advanced technologies to rev
 - Chat History: IKNOW remembers your previous queries, allowing for more contextual and coherent conversations.
 - Evaluation-Driven Design: Uses TruLens to fine-tune the system for optimal answer relevance and performance.
 
-# Why IKNOW?
+# 🎯Why IKNOW?
 IKNOW is more than just a study tool it's your 24/7 study partner that’s always ready to help, no matter the time or place. Whether you're struggling to understand a complex concept, need a quick summary of a lecture, or want to explore topics beyond your course material, IKNOW is here for you.
 - Ask Anything, Anytime: Have a question at 2 AM? Need clarification on a topic you’re too shy to ask in class? IKNOW is available around the clock, ready to provide clear, accurate answers without judgment.
 - Personalized Learning: IKNOW adapts to your needs, helping you focus on what matters most, whether it’s exam preparation, understanding tricky concepts, or exploring additional resources.
@@ -21,7 +21,7 @@ IKNOW is more than just a study tool it's your 24/7 study partner that’s alway
 - Streaming Responses for Real-Time Learning: With its real-time streaming output, IKNOW makes learning interactive and engaging, helping you grasp concepts faster and more effectively.
 IKNOW is designed to make studying less stressful and more productive. It’s like having a patient, knowledgeable tutor in your pocket, ready to help you succeed anytime, anywhere.
 
-# Setup and Installation
+# 🚀Setup and Installation
 ## Prerequisites
 Before you begin, ensure you have the following installed:
 - Python 3.9 or higher
@@ -68,7 +68,7 @@ cd IKNOW
 
 # Usage
 
-# How It Works
+# 💡How It Works
 IKNOW leverages a combination of Snowflake Cortex, Mistral Large 2 model and Tavily Search to provide accurate, context-aware, and real-time responses to your study-related queries. Here's a detailed breakdown of how it works:
 1. User Query:
    The user inputs a question or query related to their study material
@@ -88,7 +88,7 @@ The generated prompt is passed to Snowflake Cortex, which uses the Mistral Large
 - Multi-Language Support: Expand support for multiple languages to cater to a global audience.
 - Voice-based interaction for hands-free assistance.
 
-# License
+# 📝License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
 # Challenges I Ran Into
