@@ -33,16 +33,26 @@ Before you begin, ensure you have the following installed:
 cd IKNOW
 2. Install Dependencies: pip install -r requirements.txt
 3. Set Up Snowflake Credentials:
-   Create a secrets.toml file in the .streamlit directory with your Snowflake credentials:
-       [snowflake]
-    account = "your_account"
-    user = "your_user"
-    password = "your_password"
-    warehouse = "your_warehouse"
-    database = "your_database"
-    schema = "your_schema"
-    role = "your_role"
+   Create a secrets.toml file in the streamlit directory with your Snowflake credentials:
+
+   [snowflake]
+
+   account = "your_account"
+
+   user = "your_user"
+
+   password = "your_password"
+
+   warehouse = "your_warehouse"
+
+   database = "your_database"
+   
+   schema = "your_schema"
+   
+   role = "your_role"
     
-    [secrets]
-    TAVILY_API_KEY = "your_tavily_api_key"
-4. Run the Application: streamlit run IKNOW.py
+   [secrets]
+   
+   TAVILY_API_KEY = "your_tavily_api_key"
+   
+5. Run the Application: streamlit run IKNOW.py
