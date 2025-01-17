@@ -134,7 +134,7 @@ def init_messages():
     """Initialize chat history."""
     if st.session_state.get("clear_conversation") or "messages" not in st.session_state:
         st.session_state.messages = []
-        welcome_message = "Hello! I'm IKNOW, your study partner! 👋 Share your course topics with me, and I'll help you organize, understand, and excel in your learning journey! 📚 What can we explore together today? 🎓"
+        welcome_message = "Hello! I'm IKNOW, your study partner! 👋 Share your course content with me, and I'll help you organize, understand, and excel in your learning journey! 📚 What can we explore together today? 🎓"
         st.session_state.messages.append({"role": "assistant", "content": welcome_message})
 
 def get_chat_history():
