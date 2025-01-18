@@ -48,7 +48,7 @@ role = "<your-role>"
 [secrets]
 TAVILY_API_KEY = "<your_tavily_api_key>"
 ```
-4. Run the Application: streamlit run IKNOW.py
+5. Run the Application: streamlit run IKNOW.py
 
 # 📂File Details
 - IKNOW.py: The main Streamlit application file that contains the logic for the study assistant.
