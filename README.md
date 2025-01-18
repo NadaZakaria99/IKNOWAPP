@@ -34,8 +34,8 @@ Before you begin, ensure you have the following installed:
 1. Clone the Repository: git clone https://github.com/yourusername/IKNOW.git
 cd IKNOW
 2. Install Dependencies: pip install -r requirements.txt
-3. Set Up Snowflake Credentials:
-   Create a secrets.toml file in the streamlit directory with your Snowflake credentials:
+3. Configure database: Execute the SQL scripts to set up the schema, tables, and required functions.
+4. Set Up Snowflake Credentials: Create a secrets.toml file in the streamlit directory with your Snowflake credentials:
 ```
 [snowflake]
 account = "<your-account>"
@@ -47,7 +47,7 @@ schema = "<your-schema>"
 role = "<your-role>"   
 [secrets]
 TAVILY_API_KEY = "<your_tavily_api_key>"
-   
+```
 4. Run the Application: streamlit run IKNOW.py
 
 # 📂File Details
@@ -58,6 +58,9 @@ TAVILY_API_KEY = "<your_tavily_api_key>"
 - TruLens_Eval.ipynb: A Jupyter notebook used to evaluate the RAG system's performance.
 
 # 🔌Usage
+- Launch the IKNOW App: Open the app and access the intuitive user interface.
+- Upload Study Materials: Upload your lecture notes or study materials in supported formats (e.g., PDFs)
+- Ask a Question: Enter a study-related query
 
 # 💡How It Works
 IKNOW leverages a combination of Snowflake Cortex, Mistral Large 2 model and Tavily Search to provide accurate, context-aware, and real-time responses to your study-related queries. Here's a detailed breakdown of how it works:
