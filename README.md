@@ -36,29 +36,28 @@ cd IKNOW
 2. Install Dependencies: pip install -r requirements.txt
 3. Set Up Snowflake Credentials:
    Create a secrets.toml file in the streamlit directory with your Snowflake credentials:
-
+```
 [snowflake]
 account = "<your-account>"
-
 user = "<your-user>"
 password = "<your-password>"
 warehouse = "<your-warehouse>"
 database = "<your-database>"
 schema = "<your-schema>"
-role = "<your-role>" 
+role = "<your-role>"   
 [secrets]
-TAVILY_API_KEY = "your_tavily_api_key"
+TAVILY_API_KEY = "<your_tavily_api_key>"
    
 4. Run the Application: streamlit run IKNOW.py
 
-# File Details
+# 📂File Details
 - IKNOW.py: The main Streamlit application file that contains the logic for the study assistant.
 - requirements.txt: Lists all the Python dependencies required to run the application.
 - sql_queries.txt: Contains the SQL queries used to set up the Snowflake database and schema and cortex search.
 - upload_your_files.py: A script to upload study materials to Snowflake.
 - TruLens_Eval.ipynb: A Jupyter notebook used to evaluate the RAG system's performance.
 
-# Usage
+# 🔌Usage
 
 # 💡How It Works
 IKNOW leverages a combination of Snowflake Cortex, Mistral Large 2 model and Tavily Search to provide accurate, context-aware, and real-time responses to your study-related queries. Here's a detailed breakdown of how it works:
@@ -76,19 +75,19 @@ The generated prompt is passed to Snowflake Cortex, which uses the Mistral Large
 6.Streaming Output:
   The response is streamed to the user in real-time, providing a smooth and interactive experience. This feature enhances user engagement and makes the interaction feel more natural.
 
-# What's Next for IKNOW?
-- Multi-Language Support: Expand support for multiple languages to cater to a global audience.
-- Voice-based interaction for hands-free assistance.
+# 🕒What's Next for IKNOW?
+- Multi-Language Support: Expanding support for multiple languages to serve a global audience.
+- Voice Interaction: Add voice-based assistance for enhanced accessibility, benefiting visually impaired users with voice commands and audio responses.
 
 # 📝License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
-# Challenges I Ran Into
+# ⚡Challenges I Ran Into
 - Contextual Relevance: Ensuring that the responses were contextually relevant to the user's query and course material.
 - Streaming Output: Implementing real-time streaming of responses to enhance user experience.
 - Web Search Integration: Filtering and summarizing web search results to provide concise and accurate answers.
 
-# What I Learned
+# 📚What I Learned
 - Snowflake Cortex: Learned how to leverage Snowflake Cortex for advanced data processing and querying.
 - Evaluation Metrics: Learned how to use TruLens to evaluate the performance of RAG systems based on relevance and groundedness.
 
