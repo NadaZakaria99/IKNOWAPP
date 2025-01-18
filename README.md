@@ -1,5 +1,5 @@
-# IKNOW - Your Study Partner
-# Project Overview
+# 🎓IKNOW - Your Study Partner
+# 💡Project Overview
 IKNOW is an AI-powered study partner that leverages advanced technologies to revolutionize the way you learn. It integrates Snowpark Cortex Search for efficient retrieval of relevant study materials and uses the Mistral Large-2 model for generating accurate and context-aware responses. Whether you need lecture summaries, key exam topics, or intelligent web-based explanations, IKNOW provides real-time assistance through a user-friendly interface, making it your ultimate study partner.
 
 # 🌟Key Features
@@ -37,27 +37,18 @@ cd IKNOW
 3. Set Up Snowflake Credentials:
    Create a secrets.toml file in the streamlit directory with your Snowflake credentials:
 
-   [snowflake]
-
-   account = "your_account"
+[snowflake]
+account = "<your-account>"
+user = "<your-user>"
+password = "<your-password>"
+warehouse = "<your-warehouse>"
+database = "<your-database>"
+schema = "<your-schema>"
+role = "<your-role>" 
+[secrets]
+TAVILY_API_KEY = "your_tavily_api_key"
    
-   user = "your_user"
-   
-   password = "your_password"
-
-   warehouse = "your_warehouse"
-
-   database = "your_database"
-   
-   schema = "your_schema"
-   
-   role = "your_role"
-    
-   [secrets]
-   
-   TAVILY_API_KEY = "your_tavily_api_key"
-   
-5. Run the Application: streamlit run IKNOW.py
+4. Run the Application: streamlit run IKNOW.py
 
 # File Details
 - IKNOW.py: The main Streamlit application file that contains the logic for the study assistant.
