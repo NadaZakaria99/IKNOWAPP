@@ -82,6 +82,7 @@ The generated prompt is passed to Snowflake Cortex, which uses the Mistral Large
 # 🕒What's Next for IKNOW?
 - Multi-Language Support: Expanding support for multiple languages to serve a global audience.
 - Voice Interaction: Add voice-based assistance for enhanced accessibility, benefiting visually impaired users with voice commands and audio responses.
+- Expand IKNOW to assist professors with creating exams, grading, and providing detailed feedback, streamlining academic assessments.
 
 # 📝License
 This project is licensed under the MIT License. See the LICENSE file for details.
